@@ -41,7 +41,7 @@ export class JupyterService implements OnDestroy {
   private sessionId = signal<string>(crypto.randomUUID());
   private kernelSocket: WebSocket | null = null;
   private pendingRequests = new Map<string, PendingRequest>(); // msg_id -> PendingRequest
-  private connectionStatus = signal<'disconnected' | 'connecting' | 'connected' | 'error'>('disconnected');
+  connectionStatus = signal<'disconnected' | 'connecting' | 'connected' | 'error'>('disconnected');
 
   constructor() {
     this.startKernel();

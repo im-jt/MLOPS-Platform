@@ -123,7 +123,29 @@
                   } @else {
                     <span class="text-xs">Autosaved</span>
                   }
-                  <span class="text-xs">Kernel: Running</span>
+                  <div class="flex items-center space-x-1.5 text-xs">
+                    <span>Kernel:</span>
+                      @switch (kernelStatus()) {
+                          @case ('connected') {
+                              <span class="font-medium text-green-600">Connected</span>
+                          }
+                          @case ('connecting') {
+                              <span class="font-medium text-amber-600 flex items-center">
+                                  <svg class="animate-spin -ml-1 mr-1 h-3 w-3 text-amber-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                  </svg>
+                                  Connecting
+                              </span>
+                          }
+                          @case ('disconnected') {
+                              <span class="font-medium text-slate-500">Disconnected</span>
+                          }
+                          @case ('error') {
+                              <span class="font-medium text-red-600" title="Could not connect to Jupyter. See README.md for setup instructions.">Error</span>
+                          }
+                      }
+                  </div>
               </div>
             </div>
         </div>
@@ -193,11 +215,6 @@
             </div>
         </main>
     </div>
-
-    <!-- Prompt Bar (Fixed Footer) -->
-    <footer class="flex-shrink-0 z-10 shadow-[0_-2px_10px_rgba(0,0,0,0.05)] min-h-[120px]" [style.height.px]="footerHeight()">
-      <app-prompt-bar (resizeStart)="onResizeStart($event)"></app-prompt-bar>
-    </footer>
 
     <!-- Settings Modal -->
     @if(isSettingsOpen() && settingsFormState(); as settings) {

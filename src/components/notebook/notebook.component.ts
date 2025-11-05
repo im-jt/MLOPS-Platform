@@ -5,7 +5,6 @@ import { NotebookCellComponent } from '../notebook-cell/notebook-cell.component'
 import { Cell, CellType } from '../../models/notebook-cell.model';
 import { GeminiService, AiProvider, AppSettings } from '../../services/gemini.service';
 import { JupyterService } from '../../services/jupyter.service';
-import { PromptBarComponent } from '../prompt-bar/prompt-bar.component';
 import { computed } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { NotebookStoreService } from '../../services/notebook-store.service';
@@ -16,7 +15,7 @@ import { MLOpsPanelComponent } from '../mlops-panel/mlops-panel.component';
   templateUrl: './notebook.component.html',
   styleUrls: [],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, RouterLink, NotebookCellComponent, PromptBarComponent, MLOpsPanelComponent],
+  imports: [CommonModule, RouterLink, NotebookCellComponent, MLOpsPanelComponent],
   host: {
     '(keydown)': 'onKeyDown($event)'
   }
@@ -33,7 +32,6 @@ export class NotebookComponent implements OnInit {
   cells = this.notebookService.cells;
   selectedCellId = this.notebookService.selectedCellId;
   activeMode = this.notebookService.activeMode;
-  footerHeight = signal(192);
 
   // Menu state
   activeMenu = signal<'file' | 'edit' | 'view' | 'run' | null>(null);
@@ -56,6 +54,7 @@ export class NotebookComponent implements OnInit {
   notebookName = this.notebookService.activeNotebookName;
   isEditingName = signal(false);
   nameInput = viewChild<ElementRef<HTMLInputElement>>('nameInput');
+  kernelStatus = this.jupyterService.connectionStatus;
 
   constructor() {
     effect(() => {
@@ -316,26 +315,6 @@ export class NotebookComponent implements OnInit {
   mergeNext(id: number) { this.notebookService.mergeWithNextCell(id); }
   moveUp(id: number) { this.notebookService.moveCellUp(id); }
   moveDown(id: number) { this.notebookService.moveCellDown(id); }
-
-  onResizeStart(event: MouseEvent) {
-    event.preventDefault();
-    const startY = event.clientY;
-    const startHeight = this.footerHeight();
-    
-    const mouseMoveHandler = (e: MouseEvent) => {
-      const newHeight = startHeight - (e.clientY - startY);
-      const constrainedHeight = Math.max(120, Math.min(newHeight, window.innerHeight * 0.8));
-      this.footerHeight.set(constrainedHeight);
-    };
-
-    const mouseUpHandler = () => {
-      document.removeEventListener('mousemove', mouseMoveHandler);
-      document.removeEventListener('mouseup', mouseUpHandler);
-    };
-
-    document.addEventListener('mousemove', mouseMoveHandler);
-    document.addEventListener('mouseup', mouseUpHandler);
-  }
 
   // Notebook Name Editing
   editName() {
