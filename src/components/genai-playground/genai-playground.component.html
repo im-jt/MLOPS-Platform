@@ -1,0 +1,477 @@
+<div class="min-h-screen bg-gray-50">
+  <!-- Header -->
+  <div class="bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <h1 class="text-4xl font-bold mb-2">🤖 Gen AI Playground</h1>
+      <p class="text-purple-100">Explore LLMs, engineer prompts, and fine-tune models</p>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="bg-white border-b border-gray-200 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <nav class="flex space-x-8">
+        <button
+          (click)="setActiveTab('catalog')"
+          [class.border-purple-500]="activeTab() === 'catalog'"
+          [class.text-purple-600]="activeTab() === 'catalog'"
+          [class.border-transparent]="activeTab() !== 'catalog'"
+          [class.text-gray-500]="activeTab() !== 'catalog'"
+          class="py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap hover:text-gray-700 hover:border-gray-300">
+          📚 LLM Catalog
+        </button>
+        <button
+          (click)="setActiveTab('prompts')"
+          [class.border-purple-500]="activeTab() === 'prompts'"
+          [class.text-purple-600]="activeTab() === 'prompts'"
+          [class.border-transparent]="activeTab() !== 'prompts'"
+          [class.text-gray-500]="activeTab() !== 'prompts'"
+          class="py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap hover:text-gray-700 hover:border-gray-300">
+          ✨ Prompt Engineering
+        </button>
+        <button
+          (click)="setActiveTab('finetuning')"
+          [class.border-purple-500]="activeTab() === 'finetuning'"
+          [class.text-purple-600]="activeTab() === 'finetuning'"
+          [class.border-transparent]="activeTab() !== 'finetuning'"
+          [class.text-gray-500]="activeTab() !== 'finetuning'"
+          class="py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap hover:text-gray-700 hover:border-gray-300">
+          🔧 Fine-Tuning
+        </button>
+      </nav>
+    </div>
+  </div>
+
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- LLM Catalog Tab -->
+    @if (activeTab() === 'catalog') {
+      <div class="space-y-6">
+        <!-- Filter Buttons -->
+        <div class="bg-white rounded-lg shadow p-4">
+          <div class="flex gap-2">
+            <button
+              (click)="setProviderFilter('all')"
+              [class.bg-purple-600]="providerFilter() === 'all'"
+              [class.text-white]="providerFilter() === 'all'"
+              [class.bg-gray-100]="providerFilter() !== 'all'"
+              class="px-4 py-2 rounded-lg font-medium transition-colors">
+              All Models
+            </button>
+            <button
+              (click)="setProviderFilter('in_house')"
+              [class.bg-blue-600]="providerFilter() === 'in_house'"
+              [class.text-white]="providerFilter() === 'in_house'"
+              [class.bg-gray-100]="providerFilter() !== 'in_house'"
+              class="px-4 py-2 rounded-lg font-medium transition-colors">
+              In-House
+            </button>
+            <button
+              (click)="setProviderFilter('3p_openai')"
+              [class.bg-green-600]="providerFilter() === '3p_openai'"
+              [class.text-white]="providerFilter() === '3p_openai'"
+              [class.bg-gray-100]="providerFilter() !== '3p_openai'"
+              class="px-4 py-2 rounded-lg font-medium transition-colors">
+              OpenAI
+            </button>
+            <button
+              (click)="setProviderFilter('3p_anthropic')"
+              [class.bg-purple-600]="providerFilter() === '3p_anthropic'"
+              [class.text-white]="providerFilter() === '3p_anthropic'"
+              [class.bg-gray-100]="providerFilter() !== '3p_anthropic'"
+              class="px-4 py-2 rounded-lg font-medium transition-colors">
+              Anthropic
+            </button>
+            <button
+              (click)="setProviderFilter('3p_google')"
+              [class.bg-yellow-600]="providerFilter() === '3p_google'"
+              [class.text-white]="providerFilter() === '3p_google'"
+              [class.bg-gray-100]="providerFilter() !== '3p_google'"
+              class="px-4 py-2 rounded-lg font-medium transition-colors">
+              Google
+            </button>
+          </div>
+        </div>
+
+        <!-- Models Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          @for (model of filteredModels(); track model.id) {
+            <div class="bg-white rounded-lg shadow-lg hover:shadow-xl transition-shadow p-6 border border-gray-200">
+              <div class="flex justify-between items-start mb-4">
+                <h3 class="text-lg font-bold text-gray-900">{{ model.name }}</h3>
+                <span [class]="getProviderBadgeColor(model.provider) + ' px-3 py-1 rounded-full text-xs font-semibold'">
+                  {{ getProviderLabel(model.provider) }}
+                </span>
+              </div>
+
+              <div class="space-y-3 mb-4 text-sm">
+                <div class="flex justify-between">
+                  <span class="text-gray-500">Base Model:</span>
+                  <span class="font-medium text-gray-900">{{ model.baseModel }}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-gray-500">Context Window:</span>
+                  <span class="font-medium text-gray-900">{{ model.contextWindow.toLocaleString() }}</span>
+                </div>
+                @if (model.parameterCount) {
+                  <div class="flex justify-between">
+                    <span class="text-gray-500">Parameters:</span>
+                    <span class="font-medium text-gray-900">{{ model.parameterCount }}B</span>
+                  </div>
+                }
+                @if (model.latencyP50) {
+                  <div class="flex justify-between">
+                    <span class="text-gray-500">Latency (p50):</span>
+                    <span class="font-medium text-gray-900">{{ model.latencyP50 }}ms</span>
+                  </div>
+                }
+                @if (model.costPerInputToken) {
+                  <div class="flex justify-between">
+                    <span class="text-gray-500">Cost (input):</span>
+                    <span class="font-medium text-gray-900">${{ (model.costPerInputToken * 1000).toFixed(3) }}/1k</span>
+                  </div>
+                }
+              </div>
+
+              <div class="border-t border-gray-200 pt-4">
+                <div class="text-xs text-gray-500 mb-2">Capabilities:</div>
+                <div class="flex flex-wrap gap-1">
+                  @if (model.capabilities.chat) {
+                    <span class="px-2 py-1 bg-blue-50 text-blue-700 rounded text-xs">Chat</span>
+                  }
+                  @if (model.capabilities.completion) {
+                    <span class="px-2 py-1 bg-green-50 text-green-700 rounded text-xs">Completion</span>
+                  }
+                  @if (model.capabilities.embedding) {
+                    <span class="px-2 py-1 bg-purple-50 text-purple-700 rounded text-xs">Embedding</span>
+                  }
+                  @if (model.capabilities.functionCalling) {
+                    <span class="px-2 py-1 bg-orange-50 text-orange-700 rounded text-xs">Functions</span>
+                  }
+                  @if (model.capabilities.vision) {
+                    <span class="px-2 py-1 bg-pink-50 text-pink-700 rounded text-xs">Vision</span>
+                  }
+                  @if (model.fineTuned) {
+                    <span class="px-2 py-1 bg-yellow-50 text-yellow-700 rounded text-xs font-semibold">Fine-Tuned</span>
+                  }
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Prompt Engineering Tab -->
+    @if (activeTab() === 'prompts') {
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Prompt Templates Sidebar -->
+        <div class="lg:col-span-1">
+          <div class="bg-white rounded-lg shadow p-4 sticky top-4">
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="font-semibold text-gray-900">Prompt Templates</h3>
+              <button
+                (click)="createNewPrompt()"
+                class="px-3 py-1 bg-purple-600 text-white rounded text-sm hover:bg-purple-700 transition-colors">
+                + New
+              </button>
+            </div>
+            <div class="space-y-2 max-h-[600px] overflow-y-auto">
+              @for (template of promptTemplates(); track template.id) {
+                <button
+                  (click)="selectPromptTemplate(template)"
+                  [class.bg-purple-50]="selectedPrompt()?.id === template.id"
+                  [class.border-purple-500]="selectedPrompt()?.id === template.id"
+                  class="w-full text-left p-3 border border-gray-200 rounded hover:bg-gray-50 transition-colors">
+                  <div class="font-medium text-sm text-gray-900 mb-1">{{ template.name }}</div>
+                  <div class="text-xs text-gray-500 mb-2 line-clamp-2">{{ template.description }}</div>
+                  <div class="flex items-center gap-2">
+                    <span class="text-xs text-gray-400">{{ template.usageCount }} uses</span>
+                    <span class="px-2 py-0.5 bg-gray-100 text-gray-600 rounded text-xs">{{ template.category }}</span>
+                  </div>
+                </button>
+              }
+            </div>
+          </div>
+        </div>
+
+        <!-- Prompt Editor -->
+        <div class="lg:col-span-2 space-y-4">
+          @if (selectedPrompt(); as prompt) {
+            <!-- Variables -->
+            @if (prompt.variables.length > 0) {
+              <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="font-semibold text-gray-900 mb-4">Template Variables</h3>
+                <div class="grid grid-cols-2 gap-4">
+                  @for (variable of prompt.variables; track variable) {
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">{{ variable }}</label>
+                      <input
+                        type="text"
+                        [value]="promptVariables()[variable] || ''"
+                        (input)="updatePromptVariable(variable, $any($event.target).value)"
+                        class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-purple-500"
+                        [placeholder]="'Enter ' + variable" />
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+
+            <!-- Prompt Input -->
+            <div class="bg-white rounded-lg shadow p-6">
+              <h3 class="font-semibold text-gray-900 mb-4">Prompt</h3>
+              <textarea
+                [value]="promptInput()"
+                (input)="promptInput.set($any($event.target).value)"
+                rows="8"
+                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 font-mono text-sm"
+                placeholder="Enter your prompt..."></textarea>
+              <button
+                (click)="generateWithPrompt()"
+                [disabled]="isGenerating() || !promptInput()"
+                class="mt-4 w-full px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed">
+                {{ isGenerating() ? '⏳ Generating...' : '✨ Generate' }}
+              </button>
+            </div>
+
+            <!-- Output -->
+            <div class="bg-white rounded-lg shadow p-6">
+              <h3 class="font-semibold text-gray-900 mb-4">Output</h3>
+              <div class="p-4 bg-gray-50 rounded-lg min-h-[200px] whitespace-pre-wrap font-mono text-sm">
+                {{ promptOutput() || 'Output will appear here...' }}
+              </div>
+            </div>
+          } @else {
+            <div class="bg-white rounded-lg shadow p-12 text-center">
+              <p class="text-gray-500">Select a prompt template or create a new one to get started</p>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Fine-Tuning Tab -->
+    @if (activeTab() === 'finetuning') {
+      <div class="space-y-6">
+        <div class="flex justify-between items-center">
+          <h2 class="text-2xl font-bold text-gray-900">Fine-Tuning Jobs</h2>
+          <button
+            (click)="openCreateJobModal()"
+            class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium">
+            + New Fine-Tuning Job
+          </button>
+        </div>
+
+        <div class="space-y-4">
+          @for (job of fineTuningJobs(); track job.id) {
+            <div class="bg-white rounded-lg shadow p-6">
+              <div class="flex justify-between items-start mb-4">
+                <div>
+                  <h3 class="text-lg font-semibold text-gray-900 mb-1">{{ job.name }}</h3>
+                  <div class="flex gap-3 text-sm text-gray-500">
+                    <span><strong>Base Model:</strong> {{ job.baseModelId }}</span>
+                    <span><strong>Dataset:</strong> {{ job.datasetId }}</span>
+                  </div>
+                </div>
+                <span [class]="getJobStatusColor(job.status) + ' px-3 py-1 rounded-full text-xs font-semibold'">
+                  {{ job.status }}
+                </span>
+              </div>
+
+              <!-- Progress Bar -->
+              @if (job.status === 'training' || job.status === 'preparing') {
+                <div class="mb-4">
+                  <div class="flex justify-between text-sm text-gray-600 mb-2">
+                    <span>Progress</span>
+                    <span>{{ job.progress }}%</span>
+                  </div>
+                  <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div
+                      [style.width.%]="job.progress"
+                      class="bg-purple-600 h-2 rounded-full transition-all"></div>
+                  </div>
+                </div>
+              }
+
+              <!-- Training Config -->
+              <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4 text-sm">
+                <div>
+                  <div class="text-gray-500">Epochs</div>
+                  <div class="font-semibold">{{ job.trainingConfig.epochs }}</div>
+                </div>
+                <div>
+                  <div class="text-gray-500">Batch Size</div>
+                  <div class="font-semibold">{{ job.trainingConfig.batchSize }}</div>
+                </div>
+                <div>
+                  <div class="text-gray-500">Learning Rate</div>
+                  <div class="font-semibold">{{ job.trainingConfig.learningRate }}</div>
+                </div>
+                <div>
+                  <div class="text-gray-500">GPUs</div>
+                  <div class="font-semibold">{{ job.gpuCount }}x {{ job.gpuType }}</div>
+                </div>
+                <div>
+                  <div class="text-gray-500">Cost</div>
+                  <div class="font-semibold">{{ formatCost(job.actualCost || job.estimatedCost) }}</div>
+                </div>
+              </div>
+
+              <!-- Metrics -->
+              @if (job.metrics && job.status === 'completed') {
+                <div class="border-t border-gray-200 pt-4">
+                  <div class="text-sm text-gray-500 mb-2">Final Metrics</div>
+                  <div class="flex gap-4">
+                    @if (job.metrics.trainingLoss) {
+                      <div>
+                        <span class="text-gray-600">Training Loss:</span>
+                        <span class="font-semibold ml-2">{{ job.metrics.trainingLoss[job.metrics.trainingLoss.length - 1].toFixed(4) }}</span>
+                      </div>
+                    }
+                    @if (job.metrics.validationLoss) {
+                      <div>
+                        <span class="text-gray-600">Validation Loss:</span>
+                        <span class="font-semibold ml-2">{{ job.metrics.validationLoss[job.metrics.validationLoss.length - 1].toFixed(4) }}</span>
+                      </div>
+                    }
+                    @if (job.metrics.perplexity) {
+                      <div>
+                        <span class="text-gray-600">Perplexity:</span>
+                        <span class="font-semibold ml-2">{{ job.metrics.perplexity[job.metrics.perplexity.length - 1].toFixed(2) }}</span>
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+
+              <!-- Timestamps -->
+              <div class="flex justify-between text-xs text-gray-500 mt-4">
+                <span>Started: {{ formatDate(job.startTime) }}</span>
+                @if (job.endTime) {
+                  <span>Completed: {{ formatDate(job.endTime) }}</span>
+                }
+              </div>
+            </div>
+          } @empty {
+            <div class="bg-white rounded-lg shadow p-12 text-center">
+              <p class="text-gray-500">No fine-tuning jobs yet. Create one to get started!</p>
+            </div>
+          }
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- Create Fine-Tuning Job Modal -->
+  @if (showCreateJobModal()) {
+    <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full">
+        <div class="p-6 border-b border-gray-200">
+          <h2 class="text-2xl font-bold text-gray-900">Create Fine-Tuning Job</h2>
+        </div>
+
+        <div class="p-6 space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Job Name *</label>
+            <input
+              type="text"
+              [value]="newFineTuneJob().name"
+              (input)="updateJobName($any($event.target).value)"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+              placeholder="e.g., Fine-tune Llama 2 for Support Tickets" />
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Base Model *</label>
+            <select
+              [value]="newFineTuneJob().baseModelId"
+              (change)="updateJobBaseModel($any($event.target).value)"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500">
+              <option value="">Select a base model...</option>
+              @for (model of llmModels(); track model.id) {
+                @if (model.provider === 'in_house' && !model.fineTuned) {
+                  <option [value]="model.id">{{ model.name }}</option>
+                }
+              }
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Dataset ID *</label>
+            <input
+              type="text"
+              [value]="newFineTuneJob().datasetId"
+              (input)="updateJobDataset($any($event.target).value)"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+              placeholder="e.g., support-tickets-v1" />
+          </div>
+
+          <div class="grid grid-cols-3 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Epochs</label>
+              <input
+                type="number"
+                [value]="newFineTuneJob().epochs"
+                (input)="updateJobEpochs(+$any($event.target).value)"
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Batch Size</label>
+              <input
+                type="number"
+                [value]="newFineTuneJob().batchSize"
+                (input)="updateJobBatchSize(+$any($event.target).value)"
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Learning Rate</label>
+              <input
+                type="number"
+                step="0.00001"
+                [value]="newFineTuneJob().learningRate"
+                (input)="updateJobLearningRate(+$any($event.target).value)"
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500" />
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="loraEnabled"
+              [checked]="newFineTuneJob().loraEnabled"
+              (change)="updateJobLoraEnabled($any($event.target).checked)"
+              class="rounded" />
+            <label for="loraEnabled" class="text-sm text-gray-700">
+              Enable LoRA (Low-Rank Adaptation) for efficient fine-tuning
+            </label>
+          </div>
+
+          @if (newFineTuneJob().loraEnabled) {
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">LoRA Rank</label>
+              <input
+                type="number"
+                [value]="newFineTuneJob().loraRank"
+                (input)="updateJobLoraRank(+$any($event.target).value)"
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500" />
+            </div>
+          }
+        </div>
+
+        <div class="p-6 border-t border-gray-200 flex justify-end gap-3">
+          <button
+            (click)="closeCreateJobModal()"
+            class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+            Cancel
+          </button>
+          <button
+            (click)="createFineTuningJob()"
+            [disabled]="!newFineTuneJob().name || !newFineTuneJob().baseModelId || !newFineTuneJob().datasetId"
+            class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+            Start Fine-Tuning
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>
