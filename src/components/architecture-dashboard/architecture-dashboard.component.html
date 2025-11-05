@@ -1,0 +1,438 @@
+<div class="bg-slate-50 min-h-screen">
+  <header class="bg-white/80 backdrop-blur-sm border-b border-slate-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <p class="text-sm font-semibold text-purple-600 uppercase tracking-wide">Michelangelo 2.0</p>
+          <h1 class="text-3xl font-bold text-slate-900">ML Platform Architecture Control Center</h1>
+          <p class="mt-2 text-slate-600 max-w-3xl">
+            Track the four architecture pillars, orchestrate the control/offline/online planes, and govern model quality,
+            tiering, and GenAI capabilities in one place.
+          </p>
+        </div>
+        <div class="bg-purple-50 text-purple-700 px-4 py-2 rounded-lg border border-purple-200 text-sm">
+          <span class="font-medium">Last synced:</span>
+          <span>{{ lastUpdated() | date:'medium' }}</span>
+        </div>
+      </div>
+      <div class="mt-6 flex flex-wrap gap-2">
+        <button
+          type="button"
+          class="px-4 py-2 rounded-md text-sm font-medium border"
+          [class.bg-purple-600]="selectedTab() === 'planes'"
+          [class.text-white]="selectedTab() === 'planes'"
+          [class.border-purple-600]="selectedTab() === 'planes'"
+          [class.text-slate-600]="selectedTab() !== 'planes'"
+          [class.border-slate-200]="selectedTab() !== 'planes'"
+          (click)="selectTab('planes')"
+        >
+          Platform Planes
+        </button>
+        <button
+          type="button"
+          class="px-4 py-2 rounded-md text-sm font-medium border"
+          [class.bg-purple-600]="selectedTab() === 'pillars'"
+          [class.text-white]="selectedTab() === 'pillars'"
+          [class.border-purple-600]="selectedTab() === 'pillars'"
+          [class.text-slate-600]="selectedTab() !== 'pillars'"
+          [class.border-slate-200]="selectedTab() !== 'pillars'"
+          (click)="selectTab('pillars')"
+        >
+          Platform Pillars
+        </button>
+        <button
+          type="button"
+          class="px-4 py-2 rounded-md text-sm font-medium border"
+          [class.bg-purple-600]="selectedTab() === 'tiers'"
+          [class.text-white]="selectedTab() === 'tiers'"
+          [class.border-purple-600]="selectedTab() === 'tiers'"
+          [class.text-slate-600]="selectedTab() !== 'tiers'"
+          [class.border-slate-200]="selectedTab() !== 'tiers'"
+          (click)="selectTab('tiers')"
+        >
+          Project Tiering
+        </button>
+        <button
+          type="button"
+          class="px-4 py-2 rounded-md text-sm font-medium border"
+          [class.bg-purple-600]="selectedTab() === 'mes'"
+          [class.text-white]="selectedTab() === 'mes'"
+          [class.border-purple-600]="selectedTab() === 'mes'"
+          [class.text-slate-600]="selectedTab() !== 'mes'"
+          [class.border-slate-200]="selectedTab() !== 'mes'"
+          (click)="selectTab('mes')"
+        >
+          MES Dashboard
+        </button>
+        <button
+          type="button"
+          class="px-4 py-2 rounded-md text-sm font-medium border"
+          [class.bg-purple-600]="selectedTab() === 'genai'"
+          [class.text-white]="selectedTab() === 'genai'"
+          [class.border-purple-600]="selectedTab() === 'genai'"
+          [class.text-slate-600]="selectedTab() !== 'genai'"
+          [class.border-slate-200]="selectedTab() !== 'genai'"
+          (click)="selectTab('genai')"
+        >
+          GenAI Capabilities
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="py-10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
+      @if (selectedTab() === 'planes') {
+        <section class="space-y-6">
+          <header class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div>
+              <h2 class="text-xl font-semibold text-slate-900">Operational Planes</h2>
+              <p class="text-sm text-slate-600">
+                Manage the control, offline, online, and generative AI planes. Each plane surfaces its mission,
+                integration points, and component inventories.
+              </p>
+            </div>
+            <div class="flex flex-wrap gap-2">
+              @for (plane of planes(); track plane.id) {
+                <button
+                  type="button"
+                  class="px-4 py-2 rounded-lg text-sm font-medium border"
+                  [class.bg-indigo-600]="selectedPlaneId() === plane.id"
+                  [class.text-white]="selectedPlaneId() === plane.id"
+                  [class.border-indigo-600]="selectedPlaneId() === plane.id"
+                  [class.text-slate-600]="selectedPlaneId() !== plane.id"
+                  [class.border-slate-200]="selectedPlaneId() !== plane.id"
+                  (click)="selectPlane(plane.id)"
+                >
+                  {{ plane.name }}
+                </button>
+              }
+            </div>
+          </header>
+
+          @if (selectedPlane(); as plane) {
+            <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+              <div class="p-6 border-b border-slate-100 grid gap-4 md:grid-cols-3">
+                <div class="md:col-span-2">
+                  <h3 class="text-lg font-semibold text-slate-900">{{ plane.name }}</h3>
+                  <p class="mt-2 text-sm text-slate-600">{{ plane.mission }}</p>
+                  <ul class="mt-4 grid gap-3">
+                    @for (highlight of plane.highlights; track highlight) {
+                      <li class="flex items-start gap-2 text-sm text-slate-700">
+                        <span class="mt-1 h-2 w-2 rounded-full bg-indigo-500"></span>
+                        <span>{{ highlight }}</span>
+                      </li>
+                    }
+                  </ul>
+                </div>
+                <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm text-slate-600">
+                  <h4 class="text-sm font-semibold text-slate-800">Component Mix</h4>
+                  <div class="mt-3 space-y-2">
+                    @for (entry of planeLifecycleSummary() | keyvalue; track entry.key) {
+                      <div class="flex items-center justify-between">
+                        <span class="capitalize">{{ entry.key.replace('-', ' ') }}</span>
+                        <span class="font-semibold text-slate-900">{{ entry.value }}</span>
+                      </div>
+                    }
+                  </div>
+                  <h4 class="mt-4 text-sm font-semibold text-slate-800">Build vs Buy</h4>
+                  <div class="mt-3 space-y-2">
+                    @for (entry of planeSourceSummary() | keyvalue; track entry.key) {
+                      <div class="flex items-center justify-between">
+                        <span class="capitalize">{{ entry.key.replace('-', ' ') }}</span>
+                        <span class="font-semibold text-slate-900">{{ entry.value }}</span>
+                      </div>
+                    }
+                  </div>
+                </div>
+              </div>
+              <div class="p-6 space-y-4">
+                <h4 class="text-sm font-semibold text-slate-800 uppercase tracking-wide">Domains</h4>
+                <div class="space-y-4">
+                  @for (domain of plane.domains; track domain.id) {
+                    <div class="border border-slate-200 rounded-xl overflow-hidden">
+                      <button
+                        type="button"
+                        class="w-full flex items-center justify-between px-4 py-3 bg-slate-100 text-left"
+                        (click)="toggleDomain(domain.id)"
+                      >
+                        <div>
+                          <h5 class="text-sm font-semibold text-slate-900">{{ domain.title }}</h5>
+                          <p class="text-xs text-slate-600">{{ domain.summary }}</p>
+                        </div>
+                        <span class="text-xs text-indigo-600 font-semibold">
+                          {{ isDomainExpanded(domain.id) ? 'Hide' : 'Show' }} details
+                        </span>
+                      </button>
+                      @if (isDomainExpanded(domain.id)) {
+                        <div class="px-4 py-4 space-y-4 text-sm text-slate-700 bg-white">
+                          <div>
+                            <h6 class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Responsibilities</h6>
+                            <ul class="mt-2 space-y-2">
+                              @for (item of domain.responsibilities; track item) {
+                                <li class="flex items-start gap-2">
+                                  <span class="mt-1 h-2 w-2 rounded-full bg-purple-500"></span>
+                                  <span>{{ item }}</span>
+                                </li>
+                              }
+                            </ul>
+                          </div>
+                          @if (domain.integrationPoints?.length) {
+                            <div>
+                              <h6 class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Integration Points</h6>
+                              <div class="mt-2 flex flex-wrap gap-2">
+                                @for (integration of domain.integrationPoints; track integration) {
+                                  <span class="inline-flex items-center px-3 py-1 rounded-full bg-slate-100 text-xs text-slate-600 border border-slate-200">
+                                    {{ integration }}
+                                  </span>
+                                }
+                              }
+                            </div>
+                          }
+                          <div>
+                            <h6 class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Components</h6>
+                            <div class="mt-2 grid gap-3 md:grid-cols-2">
+                              @for (component of domain.components; track component.id) {
+                                <div class="border border-slate-200 rounded-lg p-3 bg-slate-50">
+                                  <div class="flex items-center justify-between gap-2">
+                                    <p class="text-sm font-semibold text-slate-900">{{ component.name }}</p>
+                                    <span class="text-[10px] uppercase font-semibold px-2 py-0.5 rounded-full"
+                                          [class.bg-emerald-100]="component.lifecycle === 'active'"
+                                          [class.text-emerald-700]="component.lifecycle === 'active'"
+                                          [class.bg-amber-100]="component.lifecycle === 'in-experiment'"
+                                          [class.text-amber-700]="component.lifecycle === 'in-experiment'"
+                                          [class.bg-slate-200]="component.lifecycle === 'planned' || component.lifecycle === 'deprecated'"
+                                          [class.text-slate-700]="component.lifecycle === 'planned' || component.lifecycle === 'deprecated'">
+                                      {{ component.lifecycle.replace('-', ' ') }}
+                                    </span>
+                                  </div>
+                                  <p class="mt-2 text-xs text-slate-600">{{ component.description }}</p>
+                                  <div class="mt-3 flex flex-wrap gap-2 text-[10px] uppercase">
+                                    <span class="px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700 font-semibold">
+                                      {{ component.source }}
+                                    </span>
+                                    @if (component.interfaces?.length) {
+                                      <span class="px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
+                                        {{ component.interfaces.length }} interfaces
+                                      </span>
+                                    }
+                                    @if (component.metrics?.length) {
+                                      <span class="px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
+                                        {{ component.metrics.length }} metrics
+                                      </span>
+                                    }
+                                  </div>
+                                  @if (component.guardrails?.length) {
+                                    <div class="mt-3 text-xs text-slate-600">
+                                      <p class="font-semibold text-slate-700">Guardrails</p>
+                                      <ul class="mt-1 space-y-1">
+                                        @for (guardrail of component.guardrails; track guardrail) {
+                                          <li>• {{ guardrail }}</li>
+                                        }
+                                      </ul>
+                                    </div>
+                                  }
+                                </div>
+                              }
+                            </div>
+                          </div>
+                        </div>
+                      }
+                    </div>
+                  }
+                </div>
+              </div>
+            </div>
+          } @else {
+            <div class="bg-white border border-dashed border-slate-300 rounded-2xl p-10 text-center text-slate-500">
+              <p>No plane data available. Configure platform planes to see details here.</p>
+            </div>
+          }
+        </section>
+      } @else if (selectedTab() === 'pillars') {
+        <section class="space-y-6">
+          <header>
+            <h2 class="text-xl font-semibold text-slate-900">Four Architecture Pillars</h2>
+            <p class="text-sm text-slate-600">
+              Anchor goals, enablers, and success metrics to maintain alignment across platform teams.
+            </p>
+          </header>
+          <div class="grid gap-6 md:grid-cols-2">
+            @for (pillar of pillars(); track pillar.id) {
+              <article class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 space-y-4">
+                <div class="flex items-center justify-between">
+                  <h3 class="text-lg font-semibold text-slate-900">{{ pillar.title }}</h3>
+                  <span class="text-xs uppercase px-3 py-1 rounded-full bg-purple-100 text-purple-700 font-semibold">
+                    Pillar
+                  </span>
+                </div>
+                <p class="text-sm text-slate-600">{{ pillar.narrative }}</p>
+                <div>
+                  <h4 class="text-xs font-semibold text-slate-500 uppercase tracking-wide">North-star Outcomes</h4>
+                  <ul class="mt-2 space-y-2 text-sm text-slate-700">
+                    @for (item of pillar.northStars; track item) {
+                      <li class="flex items-start gap-2">
+                        <span class="mt-1 h-2 w-2 rounded-full bg-indigo-500"></span>
+                        <span>{{ item }}</span>
+                      </li>
+                    }
+                  </ul>
+                </div>
+                <div>
+                  <h4 class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Key Enablers</h4>
+                  <div class="mt-2 flex flex-wrap gap-2 text-xs text-slate-600">
+                    @for (enabler of pillar.keyEnablers; track enabler) {
+                      <span class="px-3 py-1 rounded-full bg-slate-100 border border-slate-200">{{ enabler }}</span>
+                    }
+                  </div>
+                </div>
+                <div>
+                  <h4 class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Metrics</h4>
+                  <ul class="mt-2 space-y-1 text-xs text-slate-600">
+                    @for (metric of pillar.metrics; track metric) {
+                      <li>• {{ metric }}</li>
+                    }
+                  </ul>
+                </div>
+              </article>
+            }
+          </div>
+        </section>
+      } @else if (selectedTab() === 'tiers') {
+        <section class="space-y-6">
+          <header>
+            <h2 class="text-xl font-semibold text-slate-900">Project Tiering & Compliance</h2>
+            <p class="text-sm text-slate-600">
+              Apply differentiated governance and support levels based on business impact and risk.
+            </p>
+          </header>
+          <div class="space-y-4">
+            @for (tier of tiers(); track tier.id) {
+              <article class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 space-y-4">
+                <div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                  <div class="md:flex-1">
+                    <div class="flex items-center gap-3">
+                      <span class="text-sm font-semibold uppercase tracking-wide text-indigo-600">
+                        {{ tier.label }}
+                      </span>
+                      <span class="text-xs text-slate-500">Review cadence: {{ tier.reviewCadence }}</span>
+                    </div>
+                    <p class="mt-2 text-sm text-slate-600">{{ tier.description }}</p>
+                    <p class="mt-3 text-xs text-slate-500 uppercase tracking-wide">Example use cases</p>
+                    <div class="mt-2 flex flex-wrap gap-2 text-xs text-slate-600">
+                      @for (useCase of tier.exampleUseCases; track useCase) {
+                        <span class="px-3 py-1 rounded-full bg-slate-100 border border-slate-200">{{ useCase }}</span>
+                      }
+                    }
+                  </div>
+                  <div class="md:w-64 bg-slate-50 border border-slate-200 rounded-xl p-4 text-xs text-slate-600 space-y-3">
+                    <div>
+                      <p class="font-semibold text-slate-700 uppercase tracking-wide">Obligations</p>
+                      <ul class="mt-2 space-y-1">
+                        @for (obligation of tier.obligations; track obligation) {
+                          <li>• {{ obligation }}</li>
+                        }
+                      </ul>
+                    </div>
+                    <div>
+                      <p class="font-semibold text-slate-700 uppercase tracking-wide">Support Model</p>
+                      <p class="mt-1">{{ tier.supportModel }}</p>
+                    </div>
+                  </div>
+                </div>
+              </article>
+            }
+          </div>
+        </section>
+      } @else if (selectedTab() === 'mes') {
+        <section class="space-y-6">
+          <header>
+            <h2 class="text-xl font-semibold text-slate-900">Model Excellence Score Dimensions</h2>
+            <p class="text-sm text-slate-600">
+              MES provides guardrails across the model lifecycle with stage-specific metrics and escalation paths.
+            </p>
+          </header>
+          <div class="grid gap-6 md:grid-cols-2">
+            @for (dimension of mesDimensions(); track dimension.id) {
+              <article class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 space-y-4">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <h3 class="text-lg font-semibold text-slate-900">{{ dimension.name }}</h3>
+                    <p class="mt-1 text-xs uppercase tracking-wide text-indigo-600">Stage: {{ dimension.stage }}</p>
+                  </div>
+                  <span class="text-xs bg-slate-100 border border-slate-200 rounded-full px-3 py-1 text-slate-600">
+                    {{ dimension.metricExamples.length }} metrics
+                  </span>
+                </div>
+                <p class="text-sm text-slate-600">{{ dimension.description }}</p>
+                <div>
+                  <h4 class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Metric Examples</h4>
+                  <div class="mt-2 flex flex-wrap gap-2 text-xs text-slate-600">
+                    @for (metric of dimension.metricExamples; track metric) {
+                      <span class="px-3 py-1 rounded-full bg-slate-100 border border-slate-200">{{ metric }}</span>
+                    }
+                  }
+                </div>
+                <div class="bg-purple-50 border border-purple-200 rounded-xl p-4 text-xs text-purple-700">
+                  <p class="font-semibold uppercase tracking-wide">Threshold Guidance</p>
+                  <p class="mt-1">{{ dimension.defaultThresholdGuidance }}</p>
+                  <p class="mt-3 font-semibold uppercase tracking-wide text-purple-800">Escalation</p>
+                  <p class="mt-1 text-purple-800">{{ dimension.escalationPolicy }}</p>
+                </div>
+              </article>
+            }
+          </div>
+        </section>
+      } @else if (selectedTab() === 'genai') {
+        <section class="space-y-6">
+          <header>
+            <h2 class="text-xl font-semibold text-slate-900">Generative AI Capability Stack</h2>
+            <p class="text-sm text-slate-600">
+              Unified GenAI gateway, LLMOps pipelines, and application toolkits extend Michelangelo to large language models.
+            </p>
+          </header>
+          <div class="grid gap-6 md:grid-cols-3">
+            @for (capability of genAiCapabilities(); track capability.id) {
+              <article class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 space-y-4">
+                <div class="flex items-start justify-between">
+                  <h3 class="text-lg font-semibold text-slate-900">{{ capability.name }}</h3>
+                  <span class="text-xs uppercase px-3 py-1 rounded-full bg-indigo-100 text-indigo-700 font-semibold">
+                    GenAI
+                  </span>
+                </div>
+                <p class="text-sm text-slate-600">{{ capability.description }}</p>
+                <div>
+                  <h4 class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Capabilities</h4>
+                  <ul class="mt-2 space-y-2 text-sm text-slate-700">
+                    @for (item of capability.capabilities; track item) {
+                      <li class="flex items-start gap-2">
+                        <span class="mt-1 h-2 w-2 rounded-full bg-indigo-500"></span>
+                        <span>{{ item }}</span>
+                      </li>
+                    }
+                  </ul>
+                </div>
+                <div>
+                  <h4 class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Guardrails</h4>
+                  <ul class="mt-2 space-y-1 text-xs text-slate-600">
+                    @for (guardrail of capability.guardrails; track guardrail) {
+                      <li>• {{ guardrail }}</li>
+                    }
+                  </ul>
+                </div>
+                <div>
+                  <h4 class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Cost Controls</h4>
+                  <ul class="mt-2 space-y-1 text-xs text-slate-600">
+                    @for (control of capability.costControls; track control) {
+                      <li>• {{ control }}</li>
+                    }
+                  </ul>
+                </div>
+              </article>
+            }
+          </div>
+        </section>
+      }
+    </div>
+  </main>
+</div>
