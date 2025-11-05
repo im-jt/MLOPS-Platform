@@ -1,0 +1,313 @@
+<div class="min-h-screen bg-gray-50">
+  @if (project(); as proj) {
+    <!-- Header -->
+    <div class="bg-white shadow">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div class="flex items-center gap-4 mb-4">
+          <a routerLink="/projects" class="text-blue-600 hover:text-blue-700">
+            ← Back to Projects
+          </a>
+        </div>
+        <div class="flex justify-between items-start">
+          <div>
+            <div class="flex items-center gap-3 mb-2">
+              <h1 class="text-3xl font-bold text-gray-900">{{ proj.name }}</h1>
+              <span [class]="getTierColor(proj.tier) + ' px-3 py-1 rounded-full text-xs font-semibold border'">
+                {{ proj.tier.toUpperCase() }}
+              </span>
+            </div>
+            <p class="text-gray-600">{{ proj.metadata.description }}</p>
+            <div class="flex gap-4 mt-3 text-sm text-gray-500">
+              <span><strong>Owner:</strong> {{ proj.metadata.owner }}</span>
+              <span><strong>Team:</strong> {{ proj.metadata.team }}</span>
+              <span><strong>Business Unit:</strong> {{ proj.metadata.businessUnit }}</span>
+            </div>
+          </div>
+          @if (proj.modelExcellenceScore) {
+            <div class="text-right">
+              <div class="text-sm text-gray-500 mb-1">Model Excellence Score</div>
+              <div [class]="getMESColor(proj.modelExcellenceScore) + ' text-5xl font-bold'">
+                {{ proj.modelExcellenceScore }}
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="bg-white border-b border-gray-200">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <nav class="flex space-x-8">
+          <button
+            (click)="setActiveTab('overview')"
+            [class.border-blue-500]="activeTab() === 'overview'"
+            [class.text-blue-600]="activeTab() === 'overview'"
+            [class.border-transparent]="activeTab() !== 'overview'"
+            [class.text-gray-500]="activeTab() !== 'overview'"
+            class="py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap hover:text-gray-700 hover:border-gray-300">
+            Overview
+          </button>
+          <button
+            (click)="setActiveTab('models')"
+            [class.border-blue-500]="activeTab() === 'models'"
+            [class.text-blue-600]="activeTab() === 'models'"
+            [class.border-transparent]="activeTab() !== 'models'"
+            [class.text-gray-500]="activeTab() !== 'models'"
+            class="py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap hover:text-gray-700 hover:border-gray-300">
+            Models ({{ models().length }})
+          </button>
+          <button
+            (click)="setActiveTab('deployments')"
+            [class.border-blue-500]="activeTab() === 'deployments'"
+            [class.text-blue-600]="activeTab() === 'deployments'"
+            [class.border-transparent]="activeTab() !== 'deployments'"
+            [class.text-gray-500]="activeTab() !== 'deployments'"
+            class="py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap hover:text-gray-700 hover:border-gray-300">
+            Deployments ({{ deployments().length }})
+          </button>
+          <button
+            (click)="setActiveTab('experiments')"
+            [class.border-blue-500]="activeTab() === 'experiments'"
+            [class.text-blue-600]="activeTab() === 'experiments'"
+            [class.border-transparent]="activeTab() !== 'experiments'"
+            [class.text-gray-500]="activeTab() !== 'experiments'"
+            class="py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap hover:text-gray-700 hover:border-gray-300">
+            Experiments ({{ experiments().length }})
+          </button>
+          <button
+            (click)="setActiveTab('monitoring')"
+            [class.border-blue-500]="activeTab() === 'monitoring'"
+            [class.text-blue-600]="activeTab() === 'monitoring'"
+            [class.border-transparent]="activeTab() !== 'monitoring'"
+            [class.text-gray-500]="activeTab() !== 'monitoring'"
+            class="py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap hover:text-gray-700 hover:border-gray-300">
+            Monitoring
+          </button>
+        </nav>
+      </div>
+    </div>
+
+    <!-- Content -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <!-- Overview Tab -->
+      @if (activeTab() === 'overview') {
+        <div class="space-y-6">
+          <!-- Stats Cards -->
+          <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+            <div class="bg-white rounded-lg shadow p-6">
+              <div class="text-sm text-gray-500 mb-1">Total Runs</div>
+              <div class="text-3xl font-bold text-gray-900">{{ projectStats().totalRuns }}</div>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6">
+              <div class="text-sm text-gray-500 mb-1">Success Rate</div>
+              <div class="text-3xl font-bold text-green-600">{{ projectStats().successRate.toFixed(1) }}%</div>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6">
+              <div class="text-sm text-gray-500 mb-1">Avg Training Time</div>
+              <div class="text-3xl font-bold text-blue-600">{{ projectStats().avgTrainingTime.toFixed(0) }}m</div>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6">
+              <div class="text-sm text-gray-500 mb-1">Active Models</div>
+              <div class="text-3xl font-bold text-purple-600">{{ projectStats().activeModels }}</div>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6">
+              <div class="text-sm text-gray-500 mb-1">Failed Runs</div>
+              <div class="text-3xl font-bold text-red-600">{{ projectStats().failedRuns }}</div>
+            </div>
+          </div>
+
+          <!-- Recent Activity -->
+          <div class="bg-white rounded-lg shadow">
+            <div class="p-6 border-b border-gray-200">
+              <h2 class="text-xl font-semibold text-gray-900">Recent Activity</h2>
+            </div>
+            <div class="p-6">
+              <div class="space-y-4">
+                @for (model of models().slice(0, 3); track model.id) {
+                  <div class="flex items-center justify-between py-3 border-b border-gray-100">
+                    <div class="flex-1">
+                      <div class="font-medium text-gray-900">{{ model.name }}</div>
+                      <div class="text-sm text-gray-500">Version {{ model.latestVersion }}</div>
+                    </div>
+                    <div class="text-right">
+                      <div [class]="getStatusColor(model.isProduction ? 'deployed' : 'development') + ' text-sm font-medium'">
+                        {{ model.isProduction ? 'Production' : 'Development' }}
+                      </div>
+                      <div class="text-xs text-gray-500">{{ formatDate(model.lastModified) }}</div>
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- Models Tab -->
+      @if (activeTab() === 'models') {
+        <div class="space-y-4">
+          @for (model of models(); track model.id) {
+            <div class="bg-white rounded-lg shadow p-6">
+              <div class="flex justify-between items-start">
+                <div class="flex-1">
+                  <h3 class="text-lg font-semibold text-gray-900 mb-2">{{ model.name }}</h3>
+                  <p class="text-sm text-gray-600 mb-3">{{ model.description }}</p>
+                  <div class="flex gap-4 text-sm">
+                    <span class="text-gray-500"><strong>Type:</strong> {{ model.type }}</span>
+                    <span class="text-gray-500"><strong>Framework:</strong> {{ model.framework }}</span>
+                    <span class="text-gray-500"><strong>Latest:</strong> v{{ model.latestVersion }}</span>
+                    <span class="text-gray-500"><strong>Deployments:</strong> {{ model.deploymentCount }}</span>
+                  </div>
+                </div>
+                <div class="flex gap-2">
+                  @if (model.isProduction) {
+                    <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold">Production</span>
+                  }
+                  <button class="px-4 py-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors text-sm font-medium">
+                    View Details →
+                  </button>
+                </div>
+              </div>
+            </div>
+          } @empty {
+            <div class="bg-white rounded-lg shadow p-12 text-center">
+              <p class="text-gray-500">No models yet. Create your first model to get started.</p>
+            </div>
+          }
+        </div>
+      }
+
+      <!-- Deployments Tab -->
+      @if (activeTab() === 'deployments') {
+        <div class="space-y-4">
+          @for (deployment of deployments(); track deployment.id) {
+            <div class="bg-white rounded-lg shadow p-6">
+              <div class="flex justify-between items-start mb-4">
+                <div>
+                  <h3 class="text-lg font-semibold text-gray-900 mb-1">{{ deployment.name }}</h3>
+                  <div class="flex gap-3 text-sm text-gray-500">
+                    <span><strong>Environment:</strong> {{ deployment.environment }}</span>
+                    <span><strong>Version:</strong> {{ deployment.modelVersion }}</span>
+                    <span><strong>Strategy:</strong> {{ deployment.strategy }}</span>
+                  </div>
+                </div>
+                <span
+                  [class]="
+                    deployment.status === 'active'
+                      ? 'bg-green-100 text-green-800'
+                      : 'bg-yellow-100 text-yellow-800'
+                  "
+                  class="px-3 py-1 rounded-full text-xs font-semibold">
+                  {{ deployment.status }}
+                </span>
+              </div>
+
+              <!-- Metrics -->
+              <div class="grid grid-cols-4 gap-4 mb-4">
+                <div>
+                  <div class="text-xs text-gray-500">QPS</div>
+                  <div class="text-lg font-semibold">{{ deployment.qps?.toLocaleString() || 'N/A' }}</div>
+                </div>
+                <div>
+                  <div class="text-xs text-gray-500">Latency P99</div>
+                  <div class="text-lg font-semibold">{{ deployment.latencyP99 }}ms</div>
+                </div>
+                <div>
+                  <div class="text-xs text-gray-500">Error Rate</div>
+                  <div class="text-lg font-semibold">{{ (deployment.errorRate! * 100).toFixed(3) }}%</div>
+                </div>
+                <div>
+                  <div class="text-xs text-gray-500">Zones</div>
+                  <div class="text-lg font-semibold">{{ deployment.zones.length }}</div>
+                </div>
+              </div>
+
+              <!-- Zones -->
+              <div class="space-y-2">
+                @for (zone of deployment.zones; track zone.zoneId) {
+                  <div class="flex items-center justify-between p-3 bg-gray-50 rounded">
+                    <div class="flex-1">
+                      <span class="font-medium text-sm">{{ zone.zoneName }}</span>
+                      <span class="text-xs text-gray-500 ml-2">{{ zone.replicas }} replicas</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                      <span class="text-sm text-gray-600">{{ zone.trafficPercentage }}% traffic</span>
+                      <span
+                        [class]="
+                          zone.healthStatus === 'healthy'
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-red-100 text-red-800'
+                        "
+                        class="px-2 py-1 rounded text-xs font-semibold">
+                        {{ zone.healthStatus }}
+                      </span>
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+          } @empty {
+            <div class="bg-white rounded-lg shadow p-12 text-center">
+              <p class="text-gray-500">No deployments yet.</p>
+            </div>
+          }
+        </div>
+      }
+
+      <!-- Experiments Tab -->
+      @if (activeTab() === 'experiments') {
+        <div class="space-y-4">
+          @for (exp of experiments(); track exp.id) {
+            <div class="bg-white rounded-lg shadow p-6">
+              <div class="flex justify-between items-start mb-4">
+                <div>
+                  <h3 class="text-lg font-semibold text-gray-900 mb-1">{{ exp.name }}</h3>
+                  <p class="text-sm text-gray-600">{{ exp.description }}</p>
+                </div>
+                <span
+                  [class]="
+                    exp.status === 'completed'
+                      ? 'bg-green-100 text-green-800'
+                      : exp.status === 'running'
+                      ? 'bg-blue-100 text-blue-800'
+                      : 'bg-red-100 text-red-800'
+                  "
+                  class="px-3 py-1 rounded-full text-xs font-semibold">
+                  {{ exp.status }}
+                </span>
+              </div>
+
+              <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                @for (metric of exp.metrics.slice(0, 4); track metric.name) {
+                  <div>
+                    <div class="text-xs text-gray-500">{{ metric.name.toUpperCase() }}</div>
+                    <div class="text-lg font-semibold">{{ metric.value.toFixed(4) }}</div>
+                  </div>
+                }
+              </div>
+
+              <div class="mt-4 flex gap-2">
+                @for (tag of exp.tags; track tag) {
+                  <span class="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs">{{ tag }}</span>
+                }
+              </div>
+            </div>
+          } @empty {
+            <div class="bg-white rounded-lg shadow p-12 text-center">
+              <p class="text-gray-500">No experiments yet.</p>
+            </div>
+          }
+        </div>
+      }
+
+      <!-- Monitoring Tab -->
+      @if (activeTab() === 'monitoring') {
+        <div class="bg-white rounded-lg shadow p-12 text-center">
+          <p class="text-gray-500">Model monitoring dashboard coming soon...</p>
+          <p class="text-sm text-gray-400 mt-2">Track Model Excellence Score, feature drift, and performance metrics</p>
+        </div>
+      }
+    </div>
+  }
+</div>
