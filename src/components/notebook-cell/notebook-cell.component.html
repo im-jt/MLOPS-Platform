@@ -1,0 +1,162 @@
+<div 
+  class="group relative my-2">
+  
+  <div class="rounded-lg border shadow border-slate-200" 
+    [class.bg-[#fcfaff]]="isSelected()">
+
+    <!-- Header with Cell Type and Toolbar -->
+    <div class="flex justify-between items-center px-3 py-1 rounded-t-lg border-b border-slate-200"
+        [class.bg-transparent]="isSelected()"
+        [class.bg-white]="!isSelected() && cell().type !== 'note'"
+        [class.bg-slate-50]="!isSelected() && cell().type === 'note'">
+        <div class="flex items-center space-x-2">
+            <span class="text-xs font-semibold uppercase tracking-wider text-slate-500">{{ cell().type }}</span>
+            @if (cell().type === 'code') {
+              @if(cell().isExecuting) {
+                  <svg class="animate-spin h-3.5 w-3.5 text-purple-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+              } @else if (cell().executionCount) {
+                  <span class="text-xs font-mono text-slate-400">[{{ cell().executionCount }}]</span>
+              }
+            } @else if (cell().type === 'prompt' && cell().isExecuting) {
+              <svg class="animate-spin h-3.5 w-3.5 text-purple-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+            }
+        </div>
+        
+        <!-- Toolbar -->
+        <div class="flex items-center space-x-1">
+            @if ((cell().type === 'code' || cell().type === 'prompt') || (cell().type === 'note' && cell().isEditing)) {
+              @if (cell().isExecuting && (cell().type === 'code' || cell().type === 'prompt')) {
+                <button (click)="$event.stopPropagation(); onStop()" title="Stop Execution" class="p-1.5 text-gray-500 rounded-md hover:bg-slate-200 hover:text-red-600">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                    <rect x="7" y="7" width="6" height="6" rx="1" />
+                  </svg>
+                </button>
+              } @else {
+                <button (click)="$event.stopPropagation(); onRun()" title="Run cell (Ctrl+Enter)" class="p-1.5 text-gray-500 rounded-md hover:bg-slate-200 hover:text-purple-600">
+                  @if (cell().isExecuting) {
+                    <div class="w-3.5 h-3.5 bg-purple-600 rounded-sm animate-pulse"></div>
+                  } @else {
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                      <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
+                    </svg>
+                  }
+                </button>
+              }
+            }
+            <button (click)="$event.stopPropagation(); onCopyContent()" title="Copy Content" class="p-1.5 text-gray-500 rounded-md hover:bg-slate-200 hover:text-purple-600">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+            </button>
+            <button title="Move Up" class="p-1.5 text-gray-500 rounded-md hover:bg-slate-200 hover:text-gray-900" (click)="$event.stopPropagation(); onMoveUp()">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7" /></svg>
+            </button>
+            <button title="Move Down" class="p-1.5 text-gray-500 rounded-md hover:bg-slate-200 hover:text-gray-900" (click)="$event.stopPropagation(); onMoveDown()">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
+            </button>
+            <button title="Delete" class="p-1.5 text-gray-500 rounded-md hover:bg-slate-200 hover:text-red-500" (click)="$event.stopPropagation(); onDelete()">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" /></svg>
+            </button>
+            <div class="relative">
+              <button (click)="$event.stopPropagation(); isMoreMenuOpen.set(!isMoreMenuOpen())" title="More" class="p-1.5 text-gray-500 rounded-md hover:bg-slate-200 hover:text-gray-900">
+               <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 12.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 18.75a.75.75 0 110-1.5.75.75 0 010 1.5z" />
+                </svg>
+              </button>
+              @if(isMoreMenuOpen()) {
+                <div class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-20 border border-gray-100 text-sm">
+                    <a (click)="$event.stopPropagation(); onSplit()" class="block px-4 py-2 text-gray-700 hover:bg-gray-100 cursor-pointer">Split Cell</a>
+                </div>
+              }
+            </div>
+        </div>
+    </div>
+
+    <div class="p-2"
+      [class.rounded-b-lg]="!((cell().type === 'code' || cell().type === 'prompt') && cell().output)"
+      [class.bg-transparent]="isSelected()"
+      [class.bg-white]="!isSelected()"
+      >
+      <!-- Main Content Area -->
+      <div>
+        @switch (cell().type) {
+          @case ('note') {
+            @if (cell().isEditing) {
+              <div #editorContainer class="w-full outline-none monaco-no-border"></div>
+            } @else {
+              <div class="prose prose-sm sm:prose-base max-w-none text-gray-800 " [innerHTML]="renderedContent()"></div>
+            }
+          }
+          @case ('code') {
+            @if (!cell().isInputCollapsed) {
+              <div #editorContainer class="w-full outline-none monaco-no-border"></div>
+            }
+          }
+          @case ('prompt') {
+            <div #editorContainer class="w-full outline-none monaco-no-border"></div>
+          }
+        }
+      </div>
+    </div>
+    
+    <!-- OUTPUT SECTION -->
+    @if ((cell().type === 'code' || cell().type === 'prompt') && cell().output) {
+      <div class="border-t border-slate-200 rounded-b-lg overflow-hidden">
+        <div class="flex">
+          <div class="w-1 flex-shrink-0" [class.bg-sky-500]="cell().type === 'code'" [class.bg-purple-600]="cell().type === 'prompt'"></div>
+          <div class="flex-grow" [class.bg-transparent]="isSelected()" [class.bg-slate-50]="!isSelected()">
+            <div class="flex justify-between items-center px-2 py-1 cursor-pointer" 
+                 (click)="$event.stopPropagation(); onToggleOutput()"
+                 [class.bg-purple-50]="isSelected()"
+                 [class.bg-slate-100]="!isSelected()"
+                 [class.border-b]="!cell().isOutputCollapsed"
+                 [class.border-slate-200]="!cell().isOutputCollapsed">
+              <div class="flex items-center space-x-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-slate-500 transition-transform duration-200" [class.rotate-90]="!cell().isOutputCollapsed" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                </svg>
+                @if (cell().type === 'code') {
+                  <span class="text-xs font-mono text-slate-500">Output: {{ cell().executionCount }}</span>
+                } @else {
+                  <span class="text-xs font-semibold text-slate-600">Assistant's Response</span>
+                }
+              </div>
+              <button (click)="$event.stopPropagation(); onCopyOutput()" title="Copy output" class="p-1 text-slate-400 hover:text-slate-600 rounded">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+              </button>
+            </div>
+
+            @if (!cell().isOutputCollapsed) {
+              <div class="p-2">
+                @if (cell().type === 'code') {
+                  <pre class="font-mono text-slate-700 whitespace-pre-wrap text-sm">{{ cell().output }}</pre>
+                } @else {
+                  <div class="space-y-4">
+                    @if (promptResponseTextHtml()) {
+                      <div class="prose prose-sm max-w-none" [innerHTML]="promptResponseTextHtml()"></div>
+                    }
+                    @if (promptResponseCode()) {
+                      <div class="relative">
+                        <div #outputEditorContainer class="w-full border border-slate-200 rounded-md overflow-hidden outline-none"></div>
+                        <button (click)="$event.stopPropagation(); onAddCodeCell()" class="absolute top-2 right-2 z-10 inline-flex items-center px-2 py-1 text-xs font-semibold text-white bg-purple-600 rounded-md hover:bg-purple-700">
+                           <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                          </svg>
+                          Add as Code Cell
+                        </button>
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+</div>

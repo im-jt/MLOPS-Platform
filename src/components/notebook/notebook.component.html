@@ -1,0 +1,341 @@
+<div class="flex flex-col h-screen font-sans bg-slate-100 text-slate-800" (click)="closeMenus()">
+    <!-- Header -->
+    <header class="flex-shrink-0 bg-white/80 backdrop-blur-sm border-b border-slate-200 z-30">
+        <div class="px-6 py-2 flex items-center justify-between">
+            <div class="flex items-center space-x-4">
+                <a routerLink="/" class="flex items-center space-x-2 text-sm text-slate-600 font-semibold hover:text-purple-600 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+                    </svg>
+                    <span>Data Science Lab</span>
+                </a>
+                <div class="h-5 border-l border-slate-200"></div>
+                <div class="flex items-center">
+                    @if (isEditingName()) {
+                        <input #nameInput type="text" [value]="notebookName()" (blur)="saveName($event)" (keydown.enter)="saveName($event)" (keydown.escape)="cancelEditName()" class="px-2 py-0.5 border border-slate-300 rounded focus:outline-none focus:ring-0 text-base font-semibold text-slate-800 bg-white">
+                    } @else {
+                        <h1 (click)="editName()" class="text-base font-semibold text-slate-800 cursor-pointer hover:bg-slate-100 px-2 py-0.5 rounded transition-colors">{{ notebookName() }}</h1>
+                    }
+                </div>
+            </div>
+            <div class="flex items-center space-x-4 text-sm">
+                <div class="flex items-center space-x-2">
+                    <span class="font-medium">CPU:</span>
+                    <div class="w-24 h-4 bg-green-100 rounded-full overflow-hidden">
+                        <div class="h-full bg-green-500" [style.width.%]="cpuUsage()"></div>
+                    </div>
+                    <span class="text-slate-500 w-24 text-right">{{ (cpuUsage() / 100 * maxCpuCores).toFixed(3) }} / {{ maxCpuCores.toFixed(3) }}</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <span class="font-medium">RAM:</span>
+                    <div class="w-24 h-4 bg-green-100 rounded-full overflow-hidden">
+                        <div class="h-full bg-green-500" [style.width.%]="ramUsage() / maxRam * 100"></div>
+                    </div>
+                    <span class="text-slate-500 w-24 text-right">{{ ramUsage().toFixed(3) }} / {{ maxRam.toFixed(3) }}</span>
+                </div>
+            </div>
+        </div>
+        <div class="px-6 py-2 flex items-center justify-between border-t border-slate-200">
+            <div class="flex items-center space-x-1 text-sm font-medium">
+                <!-- File Menu -->
+                <div class="relative menu-container">
+                    <button (click)="$event.stopPropagation(); toggleMenu('file')" class="px-3 py-1 rounded hover:bg-slate-200 hover:text-purple-600 transition-colors" [class.bg-slate-200]="activeMenu() === 'file'">File</button>
+                    @if (activeMenu() === 'file') {
+                        <div class="absolute left-0 mt-2 w-56 bg-white rounded-md shadow-lg z-20 border border-slate-200 text-sm font-normal">
+                            <a (click)="saveNotebook()" class="block px-4 py-2 text-slate-700 hover:bg-slate-100 cursor-pointer">Save Notebook</a>
+                            <a (click)="printNotebook()" class="block px-4 py-2 text-slate-700 hover:bg-slate-100 cursor-pointer">Print</a>
+                            <div class="border-t border-slate-100 my-1"></div>
+                            <a (click)="downloadAsPython()" class="block px-4 py-2 text-slate-700 hover:bg-slate-100 cursor-pointer">Download as Python (.py)</a>
+                            <a (click)="downloadAsMarkdown()" class="block px-4 py-2 text-slate-700 hover:bg-slate-100 cursor-pointer">Download as Markdown (.md)</a>
+                        </div>
+                    }
+                </div>
+                <!-- Edit Menu -->
+                <div class="relative menu-container">
+                    <button (click)="$event.stopPropagation(); toggleMenu('edit')" class="px-3 py-1 rounded hover:bg-slate-200 hover:text-purple-600 transition-colors" [class.bg-slate-200]="activeMenu() === 'edit'">Edit</button>
+                    @if (activeMenu() === 'edit') {
+                        <div class="absolute left-0 mt-2 w-64 bg-white rounded-md shadow-lg z-20 border border-slate-200 text-sm font-normal">
+                            <a (click)="cutCell()" class="flex justify-between px-4 py-2 text-slate-700 hover:bg-slate-100 cursor-pointer">Cut Cell <span class="text-slate-400">X</span></a>
+                            <a (click)="copyCell()" class="flex justify-between px-4 py-2 text-slate-700 hover:bg-slate-100 cursor-pointer">Copy Cell <span class="text-slate-400">C</span></a>
+                            <a (click)="pasteCell('above')" class="flex justify-between px-4 py-2 text-slate-700 hover:bg-slate-100 cursor-pointer">Paste Cell Above</a>
+                            <a (click)="pasteCell('below')" class="flex justify-between px-4 py-2 text-slate-700 hover:bg-slate-100 cursor-pointer">Paste Cell Below <span class="text-slate-400">V</span></a>
+                             <div class="border-t border-slate-100 my-1"></div>
+                            <a (click)="deleteSelectedCell()" class="flex justify-between px-4 py-2 text-slate-700 hover:bg-slate-100 cursor-pointer">Delete Cell <span class="text-slate-400">D</span></a>
+                            <a (click)="splitSelectedCell()" class="flex justify-between px-4 py-2 text-slate-700 hover:bg-slate-100 cursor-pointer">Split Cell <span class="text-slate-400">W</span></a>
+                             <div class="border-t border-slate-100 my-1"></div>
+                            <a (click)="mergeSelectedCellBelow()" class="flex justify-between px-4 py-2 text-slate-700 hover:bg-slate-100 cursor-pointer">Merge Cell Below <span class="text-slate-400">Ctrl+J</span></a>
+                             <div class="border-t border-slate-100 my-1"></div>
+                            <a (click)="moveSelectedCellUp()" class="flex justify-between px-4 py-2 text-slate-700 hover:bg-slate-100 cursor-pointer">Move Cell Up <span class="text-slate-400">↑</span></a>
+                            <a (click)="moveSelectedCellDown()" class="flex justify-between px-4 py-2 text-slate-700 hover:bg-slate-100 cursor-pointer">Move Cell Down <span class="text-slate-400">↓</span></a>
+                        </div>
+                    }
+                </div>
+                <!-- View Menu -->
+                <div class="relative menu-container">
+                    <button (click)="$event.stopPropagation(); toggleMenu('view')" class="px-3 py-1 rounded hover:bg-slate-200 hover:text-purple-600 transition-colors" [class.bg-slate-200]="activeMenu() === 'view'">View</button>
+                    @if (activeMenu() === 'view') {
+                        <div class="absolute left-0 mt-2 w-56 bg-white rounded-md shadow-lg z-20 border border-slate-200 text-sm font-normal">
+                            <a (click)="toggleLineNumbers()" class="block px-4 py-2 text-slate-700 hover:bg-slate-100 cursor-pointer">{{ notebookService.showLineNumbers() ? 'Hide' : 'Show' }} Line Numbers</a>
+                            <div class="border-t border-slate-100 my-1"></div>
+                            <a (click)="collapseAllInputs()" class="block px-4 py-2 text-slate-700 hover:bg-slate-100 cursor-pointer">Collapse All Inputs</a>
+                            <a (click)="expandAllInputs()" class="block px-4 py-2 text-slate-700 hover:bg-slate-100 cursor-pointer">Expand All Inputs</a>
+                            <div class="border-t border-slate-100 my-1"></div>
+                            <a (click)="collapseAllOutputs()" class="block px-4 py-2 text-slate-700 hover:bg-slate-100 cursor-pointer">Collapse All Outputs</a>
+                            <a (click)="expandAllOutputs()" class="block px-4 py-2 text-slate-700 hover:bg-slate-100 cursor-pointer">Expand All Outputs</a>
+                        </div>
+                    }
+                </div>
+                <!-- Run Menu -->
+                <div class="relative menu-container">
+                    <button (click)="$event.stopPropagation(); toggleMenu('run')" class="px-3 py-1 rounded hover:bg-slate-200 hover:text-purple-600 transition-colors" [class.bg-slate-200]="activeMenu() === 'run'">Run</button>
+                     @if (activeMenu() === 'run') {
+                        <div class="absolute left-0 mt-2 w-80 bg-white rounded-md shadow-lg z-20 border border-slate-200 text-sm font-normal">
+                            <a (click)="runSelected()" class="flex justify-between px-4 py-2 text-slate-700 hover:bg-slate-100 cursor-pointer">Run Selected Cells <span class="text-slate-400">Ctrl+Enter</span></a>
+                            <a (click)="runSelectedAndInsert()" class="flex justify-between px-4 py-2 text-slate-700 hover:bg-slate-100 cursor-pointer">Run Selected Cells and Insert Below <span class="text-slate-400">Alt+Enter</span></a>
+                            <a (click)="executeCellAndSelectNext(selectedCellId()!)" class="flex justify-between px-4 py-2 text-slate-700 hover:bg-slate-100 cursor-pointer">Run Selected Cells and Select Below <span class="text-slate-400">Shift+Enter</span></a>
+                            <div class="border-t border-slate-100 my-1"></div>
+                            <a (click)="runAllCells()" class="block px-4 py-2 text-slate-700 hover:bg-slate-100 cursor-pointer">Run All Cells</a>
+                            <a (click)="runAllAbove()" class="block px-4 py-2 text-slate-700 hover:bg-slate-100 cursor-pointer">Run All Above</a>
+                            <a (click)="runAllBelow()" class="block px-4 py-2 text-slate-700 hover:bg-slate-100 cursor-pointer">Run All Below</a>
+                            <div class="border-t border-slate-100 my-1"></div>
+                            <a (click)="clearAllOutputs()" class="block px-4 py-2 text-slate-700 hover:bg-slate-100 cursor-pointer">Clear All Outputs</a>
+                        </div>
+                    }
+                </div>
+            </div>
+            <div class="flex items-center space-x-4">
+              <div class="flex items-center space-x-2">
+                  <span class="text-sm font-medium text-slate-600">Mode:</span>
+                  <div class="flex items-center bg-slate-100 rounded-lg p-0.5 text-sm">
+                      <button (click)="notebookService.setMode('standard')" [class.bg-white]="activeMode() === 'standard'" [class.text-slate-800]="activeMode() === 'standard'" [class.text-slate-500]="activeMode() !== 'standard'" class="px-2 py-0.5 rounded-md transition-colors">Standard</button>
+                      <button (click)="notebookService.setMode('concise')" [class.bg-white]="activeMode() === 'concise'" [class.text-slate-800]="activeMode() === 'concise'" [class.text-slate-500]="activeMode() !== 'concise'" class="px-2 py-0.5 rounded-md transition-colors">Concise</button>
+                      <button (click)="notebookService.setMode('learning')" [class.bg-white]="activeMode() === 'learning'" [class.text-slate-800]="activeMode() === 'learning'" [class.text-slate-500]="activeMode() !== 'learning'" class="px-2 py-0.5 rounded-md transition-colors">Learning</button>
+                  </div>
+              </div>
+              <button (click)="$event.stopPropagation(); openSettings()" title="Settings" class="p-1.5 text-slate-500 hover:bg-slate-200 rounded-md">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd" />
+                </svg>
+              </button>
+              <div class="flex items-center space-x-2 text-slate-500">
+                  @if (isSaving()) {
+                    <span class="text-xs text-green-600">Saved!</span>
+                  } @else {
+                    <span class="text-xs">Autosaved</span>
+                  }
+                  <span class="text-xs">Kernel: Running</span>
+              </div>
+            </div>
+        </div>
+    </header>
+    
+    <div class="flex-1 flex flex-row overflow-hidden">
+        <!-- Main Content: Notebook cells -->
+        <main class="flex-1 overflow-y-auto p-6" (click)="selectCell(null)">
+            <div class="max-w-6xl mx-auto">
+                @if (cells().length > 0) {
+                    <div class="relative group h-4">
+                        <div class="absolute -top-1 w-full flex justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                            <div class="bg-white/80 backdrop-blur-sm shadow-sm border border-slate-200 rounded-full flex items-center text-xs">
+                                <button (click)="$event.stopPropagation(); addCellAtIndex(0, 'code')" class="px-3 py-1 text-slate-600 hover:text-purple-600 border-r border-slate-200 transition-colors">+ Code</button>
+                                <button (click)="$event.stopPropagation(); addCellAtIndex(0, 'prompt')" class="px-3 py-1 text-slate-600 hover:text-purple-600 border-r border-slate-200 transition-colors">+ Prompt</button>
+                                <button (click)="$event.stopPropagation(); addCellAtIndex(0, 'note')" class="px-3 py-1 text-slate-600 hover:text-purple-600 transition-colors">+ Note</button>
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                @for (cell of cells(); track cell.id; let i = $index) {
+                  <div [attr.data-cell-id]="cell.id" (click)="$event.stopPropagation(); selectCell(cell.id)">
+                      <app-notebook-cell 
+                          [cell]="cell" 
+                          [isSelected]="selectedCellId() === cell.id"
+                          [showLineNumbers]="notebookService.showLineNumbers()"
+                          (updateContent)="updateCellContent($event)"
+                          (delete)="deleteCell($event)"
+                          (toggleDetails)="toggleDetails($event)"
+                          (toggleInput)="toggleInput($event)"
+                          (toggleOutput)="toggleOutput($event)"
+                          (toggleCollapsed)="toggleCollapsed($event)"
+                          (copyContent)="copyContent($event)"
+                          (copyOutput)="copyOutput($event)"
+                          (mergeNext)="mergeNext($event)"
+                          (moveUp)="moveUp($event)"
+                          (moveDown)="moveDown($event)"
+                          (split)="split($event)"
+                          (run)="executeCell($event, false)"
+                          (stop)="stopExecution($event)"
+                          (addCodeCell)="addCodeCellFromPrompt($event)"
+                          >
+                      </app-notebook-cell>
+                  </div>
+                  <div class="relative group h-4">
+                      <div class="absolute -top-1 w-full flex justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                          <div class="bg-white/80 backdrop-blur-sm shadow-sm border border-slate-200 rounded-full flex items-center text-xs">
+                              <button (click)="$event.stopPropagation(); addCellAtIndex(i + 1, 'code')" class="px-3 py-1 text-slate-600 hover:text-purple-600 border-r border-slate-200 transition-colors">+ Code</button>
+                              <button (click)="$event.stopPropagation(); addCellAtIndex(i + 1, 'prompt')" class="px-3 py-1 text-slate-600 hover:text-purple-600 border-r border-slate-200 transition-colors">+ Prompt</button>
+                              <button (click)="$event.stopPropagation(); addCellAtIndex(i + 1, 'note')" class="px-3 py-1 text-slate-600 hover:text-purple-600 transition-colors">+ Note</button>
+                          </div>
+                      </div>
+                  </div>
+                }
+
+                @if (cells().length === 0) {
+                  <div class="text-center py-12 text-slate-500">
+                    <p>Notebook is empty.</p>
+                    <div class="mt-4 space-x-2">
+                      <button (click)="$event.stopPropagation(); addCellAtIndex(0, 'code')" class="px-3 py-1.5 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition-colors">+ Code</button>
+                       <button (click)="$event.stopPropagation(); addCellAtIndex(0, 'prompt')" class="px-3 py-1.5 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition-colors">+ Prompt</button>
+                      <button (click)="$event.stopPropagation(); addCellAtIndex(0, 'note')" class="px-3 py-1.5 text-sm font-medium text-slate-700 bg-white border border-slate-200 rounded-md hover:bg-slate-50 transition-colors">+ Note</button>
+                    </div>
+                  </div>
+                }
+            </div>
+        </main>
+    </div>
+
+    <!-- Prompt Bar (Fixed Footer) -->
+    <footer class="flex-shrink-0 z-10 shadow-[0_-2px_10px_rgba(0,0,0,0.05)] min-h-[120px]" [style.height.px]="footerHeight()">
+      <app-prompt-bar (resizeStart)="onResizeStart($event)"></app-prompt-bar>
+    </footer>
+
+    <!-- Settings Modal -->
+    @if(isSettingsOpen() && settingsFormState(); as settings) {
+      <div class="fixed inset-0 bg-black/30 z-40 flex items-center justify-center p-4" (click)="closeSettings()">
+        <div class="bg-white rounded-lg shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col settings-modal-content" (click)="$event.stopPropagation()">
+          <header class="p-4 border-b border-slate-200 flex justify-between items-center">
+            <h2 class="text-lg font-semibold text-slate-800">Settings</h2>
+            <button (click)="closeSettings()" class="p-1 text-slate-500 hover:bg-slate-100 rounded-md">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+          </header>
+          
+          <main class="flex-1 overflow-y-auto">
+            <div class="flex">
+              <!-- Tabs -->
+              <div class="w-1/4 border-r border-slate-200 p-2">
+                <nav class="flex flex-col space-y-1">
+                  <button (click)="settingsTab.set('general')" [class.bg-purple-100]="settingsTab() === 'general'" [class.text-purple-700]="settingsTab() === 'general'" [class.font-semibold]="settingsTab() === 'general'" class="w-full text-left px-3 py-2 text-sm rounded-md text-slate-600 hover:bg-slate-100">General</button>
+                  <div class="!my-2 border-t border-slate-100"></div>
+                  <span class="px-3 pb-1 text-xs font-semibold uppercase text-slate-400">AI Providers</span>
+                  <button (click)="settingsTab.set('gemini')" [class.bg-purple-100]="settingsTab() === 'gemini'" [class.text-purple-700]="settingsTab() === 'gemini'" [class.font-semibold]="settingsTab() === 'gemini'" class="w-full text-left px-3 py-2 text-sm rounded-md text-slate-600 hover:bg-slate-100">Google Gemini</button>
+                  <button (click)="settingsTab.set('azure')" [class.bg-purple-100]="settingsTab() === 'azure'" [class.text-purple-700]="settingsTab() === 'azure'" [class.font-semibold]="settingsTab() === 'azure'" class="w-full text-left px-3 py-2 text-sm rounded-md text-slate-600 hover:bg-slate-100">Azure OpenAI</button>
+                  <button (click)="settingsTab.set('claude')" [class.bg-purple-100]="settingsTab() === 'claude'" [class.text-purple-700]="settingsTab() === 'claude'" [class.font-semibold]="settingsTab() === 'claude'" class="w-full text-left px-3 py-2 text-sm rounded-md text-slate-600 hover:bg-slate-100">Anthropic Claude</button>
+                </nav>
+              </div>
+
+              <!-- Content -->
+              <div class="w-3/4 p-6 space-y-6">
+                @if (settingsTab() !== 'general') {
+                  <div>
+                    <label for="active-provider-select" class="block text-sm font-medium text-slate-700 mb-1">Active AI Provider</label>
+                    <select id="active-provider-select"
+                            [value]="settingsActiveProvider()"
+                            (change)="settingsActiveProvider.set($any($event.target).value)"
+                            class="w-full bg-white text-slate-900 px-3 py-2 border border-slate-300 rounded-md text-sm shadow-sm focus:outline-none focus:ring-0">
+                      <option value="gemini">Google Gemini</option>
+                      <option value="azure">Azure OpenAI</option>
+                      <option value="claude">Anthropic Claude</option>
+                    </select>
+                    <p class="text-xs text-slate-500 mt-1">Select the AI provider to use for prompts and agent interactions.</p>
+                  </div>
+                }
+
+                @switch (settingsTab()) {
+                  @case ('general') {
+                    <div>
+                      <h3 class="font-semibold text-slate-800 mb-4">General Settings</h3>
+                      <div class="space-y-4">
+                        <div>
+                          <label for="default-cell-type" class="block text-sm font-medium text-slate-700 mb-1">Default cell type for new cells</label>
+                          <select id="default-cell-type"
+                                  [value]="settings.general.defaultCellType"
+                                  (change)="updateSetting('general', 'defaultCellType', $any($event.target).value)"
+                                  class="w-full bg-white text-slate-900 px-3 py-2 border border-slate-300 rounded-md text-sm shadow-sm focus:outline-none focus:ring-0">
+                            <option value="code">Code</option>
+                            <option value="note">Note</option>
+                            <option value="prompt">Prompt</option>
+                          </select>
+                          <p class="text-xs text-slate-500 mt-1">The cell type created when running the last cell with Shift+Enter.</p>
+                        </div>
+                      </div>
+                    </div>
+                  }
+                  @case ('gemini') {
+                    <div>
+                      <h3 class="font-semibold text-slate-800 mb-4">Gemini Settings</h3>
+                      <div class="space-y-4">
+                        <div>
+                          <label class="block text-sm font-medium text-slate-700 mb-1">API Key</label>
+                          <input type="password" [value]="settings.gemini.apiKey" (input)="updateSetting('gemini', 'apiKey', $any($event.target).value)" class="w-full bg-white text-slate-900 px-3 py-2 border border-slate-300 rounded-md text-sm shadow-sm focus:outline-none focus:ring-0">
+                        </div>
+                        <div>
+                          <label class="block text-sm font-medium text-slate-700 mb-1">Model Name</label>
+                          <input type="text" [value]="settings.gemini.model" (input)="updateSetting('gemini', 'model', $any($event.target).value)" placeholder="e.g., gemini-2.5-flash" class="w-full bg-white text-slate-900 px-3 py-2 border border-slate-300 rounded-md text-sm shadow-sm focus:outline-none focus:ring-0">
+                        </div>
+                        <div>
+                          <label class="block text-sm font-medium text-slate-700 mb-1">System Instruction</label>
+                          <textarea rows="4" [value]="settings.gemini.systemInstruction" (input)="updateSetting('gemini', 'systemInstruction', $any($event.target).value)" class="w-full bg-white text-slate-900 px-3 py-2 border border-slate-300 rounded-md text-sm shadow-sm focus:outline-none focus:ring-0"></textarea>
+                        </div>
+                      </div>
+                    </div>
+                  }
+                  @case ('azure') {
+                    <div>
+                      <h3 class="font-semibold text-slate-800 mb-4">Azure OpenAI Settings</h3>
+                      <div class="space-y-4">
+                        <div>
+                          <label class="block text-sm font-medium text-slate-700 mb-1">API Key</label>
+                          <input type="password" [value]="settings.azure.apiKey" (input)="updateSetting('azure', 'apiKey', $any($event.target).value)" class="w-full bg-white text-slate-900 px-3 py-2 border border-slate-300 rounded-md text-sm shadow-sm focus:outline-none focus:ring-0">
+                        </div>
+                        <div>
+                          <label class="block text-sm font-medium text-slate-700 mb-1">Endpoint URL</label>
+                          <input type="text" [value]="settings.azure.endpoint" (input)="updateSetting('azure', 'endpoint', $any($event.target).value)" class="w-full bg-white text-slate-900 px-3 py-2 border border-slate-300 rounded-md text-sm shadow-sm focus:outline-none focus:ring-0">
+                        </div>
+                        <div>
+                          <label class="block text-sm font-medium text-slate-700 mb-1">Deployment Name</label>
+                          <input type="text" [value]="settings.azure.deployment" (input)="updateSetting('azure', 'deployment', $any($event.target).value)" class="w-full bg-white text-slate-900 px-3 py-2 border border-slate-300 rounded-md text-sm shadow-sm focus:outline-none focus:ring-0">
+                        </div>
+                        <div>
+                          <label class="block text-sm font-medium text-slate-700 mb-1">Model Name</label>
+                          <input type="text" [value]="settings.azure.model" (input)="updateSetting('azure', 'model', $any($event.target).value)" class="w-full bg-white text-slate-900 px-3 py-2 border border-slate-300 rounded-md text-sm shadow-sm focus:outline-none focus:ring-0">
+                        </div>
+                         <div>
+                          <label class="block text-sm font-medium text-slate-700 mb-1">System Instruction</label>
+                          <textarea rows="3" [value]="settings.azure.systemInstruction" (input)="updateSetting('azure', 'systemInstruction', $any($event.target).value)" class="w-full bg-white text-slate-900 px-3 py-2 border border-slate-300 rounded-md text-sm shadow-sm focus:outline-none focus:ring-0"></textarea>
+                        </div>
+                      </div>
+                    </div>
+                  }
+                   @case ('claude') {
+                    <div>
+                      <h3 class="font-semibold text-slate-800 mb-4">Anthropic Claude Settings</h3>
+                      <div class="space-y-4">
+                        <div>
+                          <label class="block text-sm font-medium text-slate-700 mb-1">API Key</label>
+                          <input type="password" [value]="settings.claude.apiKey" (input)="updateSetting('claude', 'apiKey', $any($event.target).value)" class="w-full bg-white text-slate-900 px-3 py-2 border border-slate-300 rounded-md text-sm shadow-sm focus:outline-none focus:ring-0">
+                        </div>
+                        <div>
+                          <label class="block text-sm font-medium text-slate-700 mb-1">Model Name</label>
+                          <input type="text" [value]="settings.claude.model" (input)="updateSetting('claude', 'model', $any($event.target).value)" placeholder="e.g., claude-3-opus-20240229" class="w-full bg-white text-slate-900 px-3 py-2 border border-slate-300 rounded-md text-sm shadow-sm focus:outline-none focus:ring-0">
+                        </div>
+                        <div>
+                          <label class="block text-sm font-medium text-slate-700 mb-1">System Instruction</label>
+                          <textarea rows="4" [value]="settings.claude.systemInstruction" (input)="updateSetting('claude', 'systemInstruction', $any($event.target).value)" class="w-full bg-white text-slate-900 px-3 py-2 border border-slate-300 rounded-md text-sm shadow-sm focus:outline-none focus:ring-0"></textarea>
+                        </div>
+                      </div>
+                    </div>
+                  }
+                }
+              </div>
+            </div>
+          </main>
+          
+          <footer class="p-4 bg-slate-50 border-t border-slate-200 flex justify-end items-center space-x-3">
+            <button (click)="closeSettings()" class="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50">Cancel</button>
+            <button (click)="saveSettings()" class="px-4 py-2 text-sm font-medium text-white bg-purple-600 border border-purple-600 rounded-md hover:bg-purple-700">Save Changes</button>
+          </footer>
+        </div>
+      </div>
+    }
+</div>

@@ -1,0 +1,103 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Data Science Lab</title>
+  <base href="/" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" type="image/x-icon" href="favicon.ico" />
+  <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+  <!-- EasyMDE for Markdown editing -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.js"></script>
+
+  <!-- Monaco Editor for code editing -->
+  <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.49.0/min/vs/loader.js"></script>
+  <script>
+    // This must be run before monaco is loaded.
+    self.MonacoEnvironment = {
+      getWorkerUrl: function (moduleId, label) {
+        const base = 'https://cdn.jsdelivr.net/npm/monaco-editor@0.49.0/min/vs';
+        if (label === 'json') {
+          return `${base}/language/json/json.worker.js`;
+        }
+        if (label === 'css' || label === 'scss' || label === 'less') {
+          return `${base}/language/css/css.worker.js`;
+        }
+        if (label === 'html' || label === 'handlebars' || label === 'razor') {
+          return `${base}/language/html/html.worker.js`;
+        }
+        if (label === 'typescript' || label === 'javascript') {
+          return `${base}/language/typescript/ts.worker.js`;
+        }
+        return `${base}/editor/editor.worker.js`;
+      }
+    };
+  </script>
+
+<style>
+    /* EasyMDE Dark Theme Overrides */
+    .EasyMDEContainer .CodeMirror {
+        background-color: #ffffff;
+        color: #1e293b;
+        border-color: #e2e8f0;
+    }
+    .editor-toolbar {
+        background-color: #f8fafc;
+        border-color: #f1f5f9;
+    }
+    .editor-toolbar a {
+        color: #475569 !important;
+    }
+    .editor-toolbar a:hover, .editor-toolbar a.active {
+        background-color: #f1f5f9;
+        color: #000000 !important;
+        border-color: #f1f5f9;
+    }
+    .editor-preview, .editor-preview-side {
+        background-color: #ffffff;
+    }
+    .CodeMirror-cursor {
+        border-left-color: #0f172a;
+    }
+    /* Hide the resizer handle as it doesn't fit the UI well */
+    .CodeMirror-sizer:after {
+        display: none !important;
+    }
+    /* Fix for prose vertical margins to align with code cells */
+    .prose > :first-child {
+        margin-top: 0;
+    }
+    .prose > :last-child {
+        margin-bottom: 0;
+    }
+</style>
+
+<script type="importmap">
+{
+  "imports": {
+    "rxjs": "https://aistudiocdn.com/rxjs@^7.8.2?conditions=es2015",
+    "rxjs/operators": "https://aistudiocdn.com/rxjs@^7.8.2/operators?conditions=es2015",
+    "rxjs/ajax": "https://aistudiocdn.com/rxjs@^7.8.2/ajax?conditions=es2015",
+    "rxjs/webSocket": "https://aistudiocdn.com/rxjs@^7.8.2/webSocket?conditions=es2015",
+    "rxjs/testing": "https://aistudiocdn.com/rxjs@^7.8.2/testing?conditions=es2015",
+    "rxjs/fetch": "https://aistudiocdn.com/rxjs@^7.8.2/fetch?conditions=es2015",
+    "@angular/compiler": "https://next.esm.sh/@angular/compiler@^20.1.6-0?external=rxjs",
+    "@angular/platform-browser": "https://next.esm.sh/@angular/platform-browser@^20.1.6-0?external=rxjs",
+    "@angular/core": "https://next.esm.sh/@angular/core@^20.1.6-0?external=rxjs",
+    "@angular/common": "https://next.esm.sh/@angular/common@^20.1.6-0?external=rxjs",
+    "@google/genai": "https://esm.run/@google/genai",
+    "@angular/forms": "https://next.esm.sh/@angular/forms@^20.1.6-0?external=rxjs",
+    "@angular/core/rxjs-interop": "https://next.esm.sh/@angular/core@^20.1.6-0/rxjs-interop?external=rxjs",
+    "@angular/router": "https://next.esm.sh/@angular/router@^20.1.6-0?external=rxjs"
+  }
+}
+</script>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans">
+  <app-root></app-root>
+</body>
+</html>

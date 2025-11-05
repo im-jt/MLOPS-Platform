@@ -1,0 +1,95 @@
+<div class="flex flex-col h-full bg-slate-100">
+  <div class="w-full h-1.5 cursor-row-resize bg-slate-200 hover:bg-slate-300 transition-colors" (mousedown)="resizeStart.emit($event)"></div>
+  <div class="px-3 py-1 flex items-center justify-between text-sm border-t border-slate-100">
+    <div class="flex items-center space-x-4">
+      <!-- Tabs -->
+      <div class="flex items-center space-x-2 font-medium">
+        <button
+          (click)="setActiveTab('code')"
+          class="px-2 pb-1 pt-1.5 transition-colors border-b-2"
+          [class.border-purple-600]="activeTab() === 'code'"
+          [class.text-slate-900]="activeTab() === 'code'"
+          [class.border-transparent]="activeTab() !== 'code'"
+          [class.text-slate-500]="activeTab() !== 'code'"
+          [class.hover:text-slate-800]="activeTab() !== 'code'">
+          Code
+        </button>
+        <button
+          (click)="setActiveTab('note')"
+          class="px-2 pb-1 pt-1.5 transition-colors border-b-2"
+          [class.border-purple-600]="activeTab() === 'note'"
+          [class.text-slate-900]="activeTab() === 'note'"
+          [class.border-transparent]="activeTab() !== 'note'"
+          [class.text-slate-500]="activeTab() !== 'note'"
+          [class.hover:text-slate-800]="activeTab() !== 'note'">
+          Note
+        </button>
+        <button
+          (click)="setActiveTab('prompt')"
+          class="px-2 pb-1 pt-1.5 transition-colors border-b-2"
+          [class.border-purple-600]="activeTab() === 'prompt'"
+          [class.text-slate-900]="activeTab() === 'prompt'"
+          [class.border-transparent]="activeTab() !== 'prompt'"
+          [class.text-slate-500]="activeTab() !== 'prompt'"
+          [class.hover:text-slate-800]="activeTab() !== 'prompt'">
+          Prompt
+        </button>
+      </div>
+
+      <!-- Mode Dropdown -->
+      <div class="relative flex items-center">
+        <select 
+          [value]="notebookService.activeMode()" 
+          (change)="onModeChange($event)"
+          class="appearance-none bg-transparent py-1.5 pl-3 pr-8 text-sm font-medium text-slate-700 focus:outline-none cursor-pointer">
+          <option value="standard">Standard</option>
+          <option value="concise">Concise</option>
+          <option value="learning">Learning</option>
+        </select>
+        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-700">
+          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+        </div>
+      </div>
+       @if (activeTab() === 'code') {
+        <button (click)="toggleLineNumbers()"
+                title="Toggle Line Numbers"
+                class="flex items-center space-x-1.5 px-2.5 py-1 text-sm text-slate-600 hover:bg-slate-200 rounded-md transition-colors"
+                [class.bg-slate-200]="showLineNumbers()">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h7" />
+            </svg>
+            <span>Lines</span>
+        </button>
+      }
+    </div>
+    <div class="flex items-center space-x-2">
+      <button 
+        (click)="submit()" 
+        [disabled]="isProcessing()"
+        class="px-4 py-1.5 bg-purple-600 text-white rounded-md hover:bg-purple-700 text-sm font-semibold transition-colors disabled:bg-slate-400 disabled:cursor-not-allowed w-32 text-center">
+        @if (isProcessing()) {
+          <span class="flex items-center justify-center">
+            <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            {{ activeTab() === 'prompt' ? 'Generating...' : 'Submitting...' }}
+          </span>
+        } @else {
+          <span>{{ activeTab() === 'prompt' ? 'Generate' : 'Submit' }}</span>
+        }
+      </button>
+      <button class="p-2 text-slate-500 hover:text-red-500 hover:bg-slate-200 rounded-md transition-colors">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+      <button class="p-2 text-slate-500 hover:bg-slate-200 rounded-md transition-colors">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9m11.25 11.25v-4.5m0 4.5h-4.5m4.5 0L15 15" />
+        </svg>
+      </button>
+    </div>
+  </div>
+  <div #editorContainer class="flex-1 w-full bg-[#fcfaff] border-t border-slate-100 outline-none"></div>
+</div>

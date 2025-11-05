@@ -1,0 +1,5 @@
+{
+  "name": "Data Science Lab with MLOps ",
+  "description": "A Jupyter-like notebook environment for running code, writing notes, and interacting with an assistant, inspired by modern development tools.",
+  "requestFramePermissions": []
+}
