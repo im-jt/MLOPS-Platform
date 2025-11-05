@@ -4,11 +4,14 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "ng serve",
+    "dev": "concurrently \"npm run server\" \"ng serve\"",
+    "server": "tsx watch server.ts",
     "build": "ng build",
     "preview": "ng serve --configuration=production"
   },
   "dependencies": {
+    "@types/express": "^4.17.21",
+    "@types/ws": "^8.5.10",
     "rxjs": "^7.8.2",
     "@angular/compiler": "^20.1.0",
     "@angular/platform-browser": "^20.1.0",
@@ -20,9 +23,14 @@
     "@angular/build": "^20.1.0",
     "@angular/cli": "^20.1.0",
     "@angular/compiler-cli": "^20.1.0",
-    "tailwindcss": "latest"
+    "tailwindcss": "latest",
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "ws": "^8.16.0"
   },
   "devDependencies": {
+    "concurrently": "^9.0.1",
+    "tsx": "^4.12.0",
     "@types/node": "^22.14.0",
     "typescript": "~5.8.2",
     "vite": "^6.2.0"

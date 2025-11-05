@@ -1,6 +1,10 @@
-import { Injectable, computed, effect, signal } from '@angular/core';
+import { Injectable, computed, effect, signal, inject, DestroyRef } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { firstValueFrom, forkJoin } from 'rxjs';
 import {
   ArchitectureState,
+  ComponentApproval,
+  ComponentLifecycle,
   GenAiCapability,
   MesDimension,
   PlaneDomain,
@@ -9,9 +13,20 @@ import {
   PlatformPlaneId,
   PlatformPillar,
   ProjectTier,
+  PlaneTelemetry,
 } from '../models/platform-architecture.model';
 
 const STORAGE_KEY = 'ml-platform-architecture-state';
+
+const API_ORIGIN = (() => {
+  if (typeof globalThis !== 'undefined' && (globalThis as any).__ARCHITECTURE_API_ORIGIN__) {
+    return String((globalThis as any).__ARCHITECTURE_API_ORIGIN__).replace(/\/$/, '');
+  }
+  return 'http://localhost:4000';
+})();
+
+const API_BASE_URL = `${API_ORIGIN.replace(/\/$/, '')}/api/architecture`;
+const TELEMETRY_WS_URL = API_ORIGIN.replace(/^http/, 'ws');
 
 const DEFAULT_PILLARS: PlatformPillar[] = [
   {
@@ -737,7 +752,12 @@ const DEFAULT_STATE: ArchitectureState = {
 
 @Injectable({ providedIn: 'root' })
 export class PlatformArchitectureService {
+  private readonly http = inject(HttpClient);
+  private readonly destroyRef = inject(DestroyRef);
   private readonly state = signal<ArchitectureState>(this.loadInitialState());
+  private readonly componentsSignal = signal<PlatformComponent[]>([]);
+  private telemetrySocket: WebSocket | null = null;
+  private componentsCache: PlatformComponent[] = [];
 
   readonly pillars = computed(() => this.state().pillars);
   readonly planes = computed(() => this.state().planes);
@@ -745,6 +765,10 @@ export class PlatformArchitectureService {
   readonly mesDimensions = computed(() => this.state().mesDimensions);
   readonly genAiCapabilities = computed(() => this.state().genAiCapabilities);
   readonly lastUpdated = computed(() => this.state().lastUpdated);
+  readonly telemetry = signal<PlaneTelemetry[]>([]);
+  readonly isLoading = signal<boolean>(false);
+  readonly error = signal<string | null>(null);
+  readonly components = computed(() => this.componentsSignal());
 
   constructor() {
     effect(() => {
@@ -755,6 +779,182 @@ export class PlatformArchitectureService {
         console.error('Failed to persist platform architecture state', error);
       }
     }, { allowSignalWrites: true });
+
+    this.destroyRef.onDestroy(() => {
+      this.telemetrySocket?.close();
+      this.telemetrySocket = null;
+    });
+
+    void this.initializeFromBackend();
+  }
+
+  private async initializeFromBackend(): Promise<void> {
+    await this.refreshFromBackend();
+    this.connectTelemetryStream();
+  }
+
+  async refreshFromBackend(): Promise<void> {
+    this.isLoading.set(true);
+    try {
+      const [components, telemetry] = await firstValueFrom(
+        forkJoin([
+          this.http.get<PlatformComponent[]>(`${API_BASE_URL}/components`),
+          this.http.get<PlaneTelemetry[]>(`${API_BASE_URL}/telemetry`),
+        ]),
+      );
+      this.applyRemoteComponents(components);
+      this.applyRemoteTelemetry(telemetry);
+      this.error.set(null);
+    } catch (err) {
+      console.error('Failed to load architecture data', err);
+      this.error.set(err instanceof Error ? err.message : String(err));
+    } finally {
+      this.isLoading.set(false);
+    }
+  }
+
+  private applyRemoteComponents(components: PlatformComponent[]): void {
+    this.componentsCache = [...components];
+    this.componentsSignal.set([...components]);
+    this.state.update((current) => {
+      const updatedPlanes = current.planes.map((plane) => {
+        const planeComponents = components.filter((component) => component.planeId === plane.id);
+        const updatedDomains = plane.domains.map((domain) => {
+          const domainComponents = planeComponents.filter((component) => component.domainId === domain.id);
+          if (domainComponents.length > 0) {
+            return { ...domain, components: domainComponents };
+          }
+          return { ...domain, components: domain.components ?? [] };
+        });
+        return { ...plane, domains: updatedDomains };
+      });
+      return { ...current, planes: updatedPlanes, lastUpdated: Date.now() };
+    });
+  }
+
+  private applyRemoteTelemetry(telemetry: PlaneTelemetry[]): void {
+    this.telemetry.set(telemetry);
+  }
+
+  private connectTelemetryStream(): void {
+    if (typeof window === 'undefined' || this.telemetrySocket) {
+      return;
+    }
+
+    try {
+      const socket = new WebSocket(TELEMETRY_WS_URL);
+      this.telemetrySocket = socket;
+
+      socket.addEventListener('message', (event) => {
+        try {
+          const payload = JSON.parse(event.data as string);
+          if (payload?.type === 'telemetry' && Array.isArray(payload.data)) {
+            this.applyRemoteTelemetry(payload.data as PlaneTelemetry[]);
+          }
+        } catch (parseError) {
+          console.error('Failed to parse telemetry payload', parseError);
+        }
+      });
+
+      socket.addEventListener('close', () => {
+        if (this.telemetrySocket === socket) {
+          this.telemetrySocket = null;
+          setTimeout(() => this.connectTelemetryStream(), 5000);
+        }
+      });
+
+      socket.addEventListener('error', (error) => {
+        console.error('Telemetry socket error', error);
+      });
+    } catch (error) {
+      console.error('Failed to connect telemetry stream', error);
+    }
+  }
+
+  getComponentById(componentId: string): PlatformComponent | undefined {
+    return this.componentsCache.find((component) => component.id === componentId);
+  }
+
+  async setComponentLifecycle(componentId: string, lifecycle: ComponentLifecycle): Promise<PlatformComponent | null> {
+    try {
+      const updated = await firstValueFrom(
+        this.http.patch<PlatformComponent>(`${API_BASE_URL}/components/${componentId}`, { lifecycle }),
+      );
+      this.mergeComponent(updated);
+      this.error.set(null);
+      return updated;
+    } catch (err) {
+      console.error('Failed to update component lifecycle', err);
+      this.error.set(err instanceof Error ? err.message : String(err));
+      return null;
+    }
+  }
+
+  async requestComponentApproval(
+    componentId: string,
+    requestedBy: string,
+    notes?: string,
+  ): Promise<ComponentApproval | null> {
+    try {
+      const approval = await firstValueFrom(
+        this.http.post<ComponentApproval>(`${API_BASE_URL}/components/${componentId}/approvals`, {
+          requestedBy,
+          notes,
+        }),
+      );
+      const component = this.getComponentById(componentId);
+      if (component) {
+        const updated: PlatformComponent = {
+          ...component,
+          approvals: [...(component.approvals ?? []), approval],
+        };
+        this.mergeComponent(updated);
+      }
+      this.error.set(null);
+      return approval;
+    } catch (err) {
+      console.error('Failed to create component approval', err);
+      this.error.set(err instanceof Error ? err.message : String(err));
+      return null;
+    }
+  }
+
+  async updateApprovalStatus(
+    componentId: string,
+    approvalId: string,
+    status: ComponentApproval['status'],
+    notes?: string,
+  ): Promise<ComponentApproval | null> {
+    try {
+      const approval = await firstValueFrom(
+        this.http.patch<ComponentApproval>(
+          `${API_BASE_URL}/components/${componentId}/approvals/${approvalId}`,
+          { status, notes },
+        ),
+      );
+      const component = this.getComponentById(componentId);
+      if (component) {
+        const updatedApprovals = (component.approvals ?? []).map((item) =>
+          item.id === approval.id ? approval : item,
+        );
+        const updatedComponent: PlatformComponent = { ...component, approvals: updatedApprovals };
+        this.mergeComponent(updatedComponent);
+      }
+      this.error.set(null);
+      return approval;
+    } catch (err) {
+      console.error('Failed to update approval status', err);
+      this.error.set(err instanceof Error ? err.message : String(err));
+      return null;
+    }
+  }
+
+  private mergeComponent(updated: PlatformComponent): void {
+    const index = this.componentsCache.findIndex((component) => component.id === updated.id);
+    const next = index === -1
+      ? [...this.componentsCache, updated]
+      : this.componentsCache.map((component) => (component.id === updated.id ? updated : component));
+    this.applyRemoteComponents(next);
   }
 
   resetState(): void {

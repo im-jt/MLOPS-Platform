@@ -2,6 +2,15 @@ export type ComponentSource = 'in-house' | 'oss' | 'cloud' | 'third-party';
 
 export type ComponentLifecycle = 'planned' | 'in-experiment' | 'active' | 'deprecated';
 
+export interface ComponentApproval {
+  id: string;
+  requestedBy: string;
+  status: 'pending' | 'approved' | 'rejected';
+  notes?: string;
+  createdAt: number;
+  updatedAt: number;
+}
+
 export interface PlatformComponent {
   id: string;
   name: string;
@@ -13,6 +22,9 @@ export interface PlatformComponent {
   metrics?: string[];
   guardrails?: string[];
   notes?: string;
+  approvals?: ComponentApproval[];
+  planeId?: PlatformPlaneId;
+  domainId?: string;
 }
 
 export interface PlaneDomain {
@@ -81,5 +93,12 @@ export interface ArchitectureState {
   tiers: ProjectTier[];
   mesDimensions: MesDimension[];
   genAiCapabilities: GenAiCapability[];
+  lastUpdated: number;
+}
+
+export interface PlaneTelemetry {
+  planeId: PlatformPlaneId;
+  lifecycleBreakdown: Record<ComponentLifecycle, number>;
+  sourceBreakdown: Record<ComponentSource, number>;
   lastUpdated: number;
 }
