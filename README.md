@@ -1,62 +1,301 @@
-# Notebook IDE - Jupyter Backend Setup Guide
+# ML Platform with MLOps
 
-This document explains how to set up and run the necessary Jupyter backend server to enable Python code execution within the Notebook IDE application.
+A comprehensive, enterprise-grade Machine Learning Platform inspired by Uber's Michelangelo, built with Angular 20. This platform provides end-to-end MLOps capabilities including project management, model development, training pipelines, deployment, monitoring, and generative AI features.
 
-## Overview
+## 🎯 Architecture Overview
 
-The Notebook IDE relies on a local Jupyter server to execute code written in `code` cells. The frontend application communicates with this server via HTTP and WebSockets. To ensure this communication works, you need to have a Jupyter server running on your local machine with specific settings.
+The platform follows a **three-plane architecture**:
 
-## Prerequisites
+### 1. **Control Plane**
+- User-facing APIs and lifecycle management
+- Kubernetes Operator design pattern
+- Manages Projects, Pipelines, Models, Deployments, and Experiments
 
-Before you begin, make sure you have the following installed:
+### 2. **Offline Data Plane**
+- Heavy-lifting for big data processing
+- Feature computation, model training, evaluation
+- Supports Spark and Ray frameworks
+- Batch inference workflows
 
-1.  **Python**: Version 3.8 or higher is recommended. You can download it from [python.org](https://www.python.org/).
-2.  **JupyterLab**: This is the next-generation web-based user interface for Project Jupyter. It's the recommended way to run the Jupyter server.
+### 3. **Online Data Plane**
+- Real-time model inference and feature serving
+- Low-latency prediction endpoints
+- GPU-optimized serving with Triton
 
-You can install JupyterLab using `pip`, the Python package installer. It's also a good practice to install `ipykernel`, which is the kernel for running Python code.
+## 🚀 Key Features
 
-Open your terminal or command prompt and run:
+### Project Management
+- **Project Tiering System** (Tier 1-4)
+  - Tier 1: Critical business models (ETA, fraud detection, safety)
+  - Tier 2: Important business models
+  - Tier 3: Standard models
+  - Tier 4: Experimental/exploratory models
+- **Model Excellence Score (MES)**: Comprehensive quality tracking
+- **Project Dashboard**: Centralized view of all ML projects
+
+### Model Development
+- **Interactive Notebooks**: Jupyter-like environment for experimentation
+- **Experiment Tracking**: Compare runs and track metrics
+- **Hyperparameter Tuning**: Automated search across parameter spaces
+- **Model Registry**: Centralized repository with versioning
+
+### Training Pipelines
+- **DAG-based Workflows**: Define complex multi-step pipelines
+- **Framework Support**: TensorFlow, PyTorch, XGBoost, scikit-learn
+- **Distributed Training**: Ray and Spark integration
+- **Checkpoint & Resume**: Fault-tolerant training
+- **Resource Management**: GPU allocation and autoscaling
+
+### Model Deployment
+- **Deployment Strategies**:
+  - Rolling updates
+  - Blue-green deployment
+  - Canary releases
+  - Shadow deployment
+- **Auto-scaling**: Dynamic resource allocation
+- **Safe Rollback**: Automatic rollback on errors
+- **Multi-zone Deployment**: Regional distribution
+
+### Monitoring & Quality
+- **Model Excellence Score (MES)**:
+  - Training accuracy
+  - Prediction accuracy
+  - Model freshness
+  - Feature quality
+  - Latency metrics
+  - Availability SLA
+- **Feature Monitoring**: Data drift detection
+- **Performance Tracking**: Real-time metrics
+- **Alert Management**: Automated health checks
+
+### Generative AI (GenAI)
+- **LLM Catalog**:
+  - In-house models (Llama 2, etc.)
+  - 3rd-party APIs (OpenAI, Anthropic, Google)
+  - Model comparison and selection
+- **Prompt Engineering**:
+  - Template management
+  - Variable substitution
+  - Version control
+  - Usage tracking
+- **Fine-Tuning**:
+  - LoRA (Low-Rank Adaptation) support
+  - Distributed GPU training
+  - Cost estimation and tracking
+  - Model evaluation
+
+### Feature Store
+- **Batch Features**: Scheduled computation
+- **Streaming Features**: Real-time updates
+- **Online Serving**: Low-latency access
+- **Feature Monitoring**: Drift and quality tracking
+
+## 📊 Data Models
+
+### Core Entities
+- **MLProject**: Project metadata, tiering, and MES
+- **Model**: Model registry with versions and lineage
+- **Pipeline**: Training and evaluation workflows
+- **Deployment**: Serving infrastructure and configuration
+- **Experiment**: Experiment tracking and comparison
+- **LLMModel**: Generative AI model catalog
+- **PromptTemplate**: Prompt engineering templates
+- **FeatureGroup**: Feature store definitions
+
+## 🛠️ Technology Stack
+
+- **Frontend**: Angular 20 with standalone components
+- **UI**: Tailwind CSS for modern, responsive design
+- **State Management**: Angular signals for reactive programming
+- **Storage**: LocalStorage for demo (replace with backend API)
+- **AI Integration**: Google Gemini API for LLM features
+
+## 📦 Installation
 
 ```bash
-pip install jupyterlab ipykernel
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+
+# Build for production
+npm run build
 ```
 
-## Running the Jupyter Server
+## 🌐 Navigation
 
-To start the Jupyter server with the correct configuration for this application, follow these steps:
+### Main Routes
+- `/` - Home page with platform overview
+- `/projects` - ML Projects dashboard
+- `/project/:id` - Project detail view
+- `/notebooks` - Notebook list
+- `/notebook/:id` - Interactive notebook editor
+- `/workflows` - MLOps workflow list
+- `/workflow/:id` - Workflow configuration
+- `/genai` - GenAI playground
 
-1.  **Open your terminal or command prompt.**
+## 🎨 Project Tiering
 
-2.  **Navigate to the directory where you want your notebooks to be saved (optional).**
+Projects are classified into four tiers to differentiate high-impact and long-tail use cases:
 
-3.  **Run the following command:**
+| Tier | Description | Examples | Support Level |
+|------|-------------|----------|---------------|
+| **Tier 1** | Critical business models | ETA, fraud detection, safety | 24/7 support, highest priority |
+| **Tier 2** | Important business models | Ranking, recommendations | High priority |
+| **Tier 3** | Standard models | Various ML applications | Standard support |
+| **Tier 4** | Experimental | Research, POCs | Self-service |
 
-    ```bash
-    jupyter lab --ServerApp.allow_origin='*' --no-browser
-    ```
+## 📈 Model Excellence Score (MES)
 
-### Command Breakdown
+MES provides a holistic view of model quality with the following components:
 
--   `jupyter lab`: This is the standard command to start the JupyterLab server.
--   `--ServerApp.allow_origin='*'`: This is a **critical** setting. It configures Cross-Origin Resource Sharing (CORS) to allow requests from any origin. The Notebook IDE frontend runs on a different origin than the Jupyter server (`localhost:8888`), so this flag is necessary for the browser to permit the connection.
-    -   **Note on Security**: For local development, using `*` is convenient. In a production environment, you would replace `*` with the specific domain where your frontend is hosted (e.g., `--ServerApp.allow_origin='https://my-notebook-app.com'`).
--   `--no-browser`: This prevents Jupyter from automatically opening its own interface in a new browser tab. Since we are using the Notebook IDE as the frontend, this is not needed.
+1. **Training Accuracy** (25% weight)
+2. **Prediction Accuracy** (25% weight)
+3. **Model Freshness** (15% weight)
+4. **Feature Quality** (15% weight)
+5. **Latency** (10% weight)
+6. **Availability** (10% weight)
 
-Once you run the command, you should see output in your terminal indicating that the Jupyter server is running and listening for connections, typically on `http://localhost:8888/`. Keep this terminal window open while you are using the Notebook IDE.
+**Score Ranges:**
+- 90-100: Excellent
+- 75-89: Good
+- 60-74: Fair
+- <60: Needs Improvement
 
-## Verification
+## 🔄 ML Development Workflow
 
-After starting the Jupyter server:
+### 1. Project Setup
+1. Create a new ML project
+2. Define project tier and metadata
+3. Set up team and ownership
 
-1.  **Open the Notebook IDE application.**
-2.  In the top-right header of the app, you should see the status **"Kernel: Running"**.
-3.  Try adding a code cell (e.g., `print("Hello from Jupyter!")`) and running it (using the play button or `Ctrl+Enter`).
-4.  If the setup is correct, you should see the output "Hello from Jupyter!" appear below the cell.
+### 2. Development
+1. Create notebook for experimentation
+2. Explore data and prototype models
+3. Track experiments and metrics
 
-## Troubleshooting
+### 3. Pipeline Creation
+1. Define training pipeline steps
+2. Configure resources (CPU, GPU)
+3. Set up feature transformations
 
--   **Connection Errors / CORS Errors**: If the app cannot connect to the kernel, check the browser's developer console (F12) for errors. If you see a CORS-related error, ensure you have included the `--ServerApp.allow_origin='*'` flag when starting the Jupyter server.
+### 4. Training
+1. Run pipeline with full dataset
+2. Track training metrics
+3. Compare experiments
 
--   **Server Not Found**: Make sure the Jupyter server is running and that you see the "Jupyter Server is running at:" message in your terminal. Ensure no other application or firewall is blocking port `8888`.
+### 5. Deployment
+1. Select best model version
+2. Configure deployment strategy
+3. Deploy to staging/production
+4. Monitor performance
 
--   **Python Environment**: If your code imports libraries that are not found, make sure those libraries are installed in the Python environment that your Jupyter kernel is using. You can install them via `pip`, for example: `pip install pandas numpy`.
+### 6. Monitoring
+1. Track Model Excellence Score
+2. Monitor feature drift
+3. Set up alerts
+4. Schedule retraining
+
+## 🤖 GenAI Features
+
+### LLM Catalog
+Browse and compare LLMs with:
+- Context window size
+- Parameter count
+- Latency metrics
+- Cost per token
+- Capability matrix
+
+### Prompt Engineering
+- Create reusable prompt templates
+- Test prompts with variables
+- Track usage and performance
+- Version control
+
+### Fine-Tuning
+- Select base model
+- Configure training parameters
+- Enable LoRA for efficiency
+- Track training progress
+- Monitor costs
+
+## 🔐 Best Practices
+
+### Model Development
+1. Start with notebooks for exploration
+2. Track all experiments systematically
+3. Use feature stores for consistency
+4. Version all models and datasets
+
+### Deployment
+1. Always deploy to staging first
+2. Use canary releases for critical models
+3. Enable auto-rollback
+4. Monitor latency and error rates
+
+### Monitoring
+1. Set up alerts for MES drops
+2. Monitor feature drift daily
+3. Track prediction quality
+4. Schedule regular retraining
+
+### GenAI
+1. Test prompts thoroughly before production
+2. Monitor token usage and costs
+3. Use in-house models for proprietary data
+4. Enable LoRA for cost-effective fine-tuning
+
+## 🧪 Jupyter Backend Setup
+
+For Python code execution in notebooks:
+
+```bash
+# Install Jupyter
+pip install jupyterlab ipykernel
+
+# Start Jupyter server
+jupyter lab --ServerApp.allow_origin='*' --no-browser
+```
+
+## 🎯 Roadmap
+
+### Current Features ✅
+- Project management with tiering
+- Interactive notebooks
+- MLOps workflows
+- Model registry (in progress)
+- Deployment manager (in progress)
+- GenAI playground
+- Monitoring dashboard (in progress)
+
+### Coming Soon 🚧
+- Feature store UI
+- Pipeline DAG visualizer
+- Model comparison tool
+- A/B testing framework
+- Advanced monitoring dashboards
+- Real-time inference testing
+- Cost analytics
+
+## 📚 References
+
+This platform is inspired by:
+- **Uber Michelangelo**: End-to-end ML platform
+- **MLflow**: Experiment tracking
+- **Kubeflow**: ML workflows on Kubernetes
+- **TFX**: TensorFlow Extended
+- **Ray**: Distributed computing
+- **Triton**: Model serving
+
+## 🤝 Contributing
+
+This is a demonstration project showcasing enterprise MLOps architecture and best practices.
+
+## 📄 License
+
+MIT License - See LICENSE file for details
+
+---
+
+**Built with ❤️ using Angular 20, TypeScript, and Tailwind CSS**
