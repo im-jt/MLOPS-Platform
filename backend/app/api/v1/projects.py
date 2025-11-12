@@ -6,6 +6,7 @@ import uuid
 
 from app.db.base import get_db
 from app.models.project import Project, ProjectStats, ProjectTier
+from app.models.user import User
 from app.schemas.project import (
     Project as ProjectSchema,
     ProjectCreate,
@@ -13,6 +14,7 @@ from app.schemas.project import (
     ProjectList,
     ProjectStats as ProjectStatsSchema,
 )
+from app.utils.auth import get_current_user, require_permission, check_user_permission
 
 router = APIRouter()
 
@@ -24,9 +26,14 @@ async def list_projects(
     tier: Optional[ProjectTier] = None,
     search: Optional[str] = None,
     db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     """List all projects with optional filtering."""
     query = select(Project)
+    
+    # Non-superusers can only see their own projects unless they have permission
+    if not current_user.is_superuser and not check_user_permission(current_user, "project", "read_all"):
+        query = query.where(Project.owner_id == current_user.id)
     
     if tier:
         query = query.where(Project.tier == tier)
@@ -34,7 +41,6 @@ async def list_projects(
     if search:
         query = query.where(
             (Project.name.ilike(f"%{search}%")) |
-            (Project.owner.ilike(f"%{search}%")) |
             (Project.team.ilike(f"%{search}%"))
         )
     
@@ -60,11 +66,17 @@ async def list_projects(
 async def create_project(
     project: ProjectCreate,
     db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_permission("project", "create")),
 ):
     """Create a new project."""
+    project_data = project.model_dump()
+    # Set the owner to the current user if not specified
+    if "owner_id" not in project_data or project_data["owner_id"] is None:
+        project_data["owner_id"] = current_user.id
+    
     db_project = Project(
         id=f"proj-{uuid.uuid4().hex[:12]}",
-        **project.model_dump(),
+        **project_data,
         model_count=0,
         pipeline_count=0,
     )
@@ -80,6 +92,7 @@ async def create_project(
 async def get_project(
     project_id: str,
     db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     """Get a specific project by ID."""
     result = await db.execute(select(Project).where(Project.id == project_id))
@@ -87,6 +100,11 @@ async def get_project(
     
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
+    
+    # Check if user has permission to view this project
+    if not current_user.is_superuser and project.owner_id != current_user.id:
+        if not check_user_permission(current_user, "project", "read_all"):
+            raise HTTPException(status_code=403, detail="Not enough permissions")
     
     return ProjectSchema.model_validate(project)
 
@@ -96,6 +114,7 @@ async def update_project(
     project_id: str,
     project_update: ProjectUpdate,
     db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     """Update a project."""
     result = await db.execute(select(Project).where(Project.id == project_id))
@@ -103,6 +122,11 @@ async def update_project(
     
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
+    
+    # Check if user has permission to update this project
+    if not current_user.is_superuser and project.owner_id != current_user.id:
+        if not check_user_permission(current_user, "project", "update"):
+            raise HTTPException(status_code=403, detail="Not enough permissions")
     
     update_data = project_update.model_dump(exclude_unset=True)
     for field, value in update_data.items():
@@ -118,6 +142,7 @@ async def update_project(
 async def delete_project(
     project_id: str,
     db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     """Delete a project."""
     result = await db.execute(select(Project).where(Project.id == project_id))
@@ -125,6 +150,11 @@ async def delete_project(
     
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
+    
+    # Only superusers or project owners with delete permission can delete
+    if not current_user.is_superuser:
+        if project.owner_id != current_user.id or not check_user_permission(current_user, "project", "delete"):
+            raise HTTPException(status_code=403, detail="Not enough permissions")
     
     await db.delete(project)
     await db.commit()
@@ -136,12 +166,19 @@ async def delete_project(
 async def get_project_stats(
     project_id: str,
     db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     """Get project statistics."""
     # Check if project exists
     result = await db.execute(select(Project).where(Project.id == project_id))
-    if not result.scalar_one_or_none():
+    project = result.scalar_one_or_none()
+    if not project:
         raise HTTPException(status_code=404, detail="Project not found")
+    
+    # Check if user has permission to view this project
+    if not current_user.is_superuser and project.owner_id != current_user.id:
+        if not check_user_permission(current_user, "project", "read_all"):
+            raise HTTPException(status_code=403, detail="Not enough permissions")
     
     # Get or create stats
     stats_result = await db.execute(
