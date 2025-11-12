@@ -5,6 +5,7 @@ from app.models.experiment import Experiment, ExperimentRun, ExperimentStatus
 from app.models.pipeline import Pipeline, PipelineRun, PipelineType, PipelineStatus, StepStatus
 from app.models.monitoring import ModelMonitoring, ModelAlert, FeatureMonitoring, AlertSeverity, AlertType
 from app.models.genai import LLMModel, PromptTemplate, FineTuningJob, GenAIUsageLog, LLMProvider, LLMStatus, FineTuningStatus
+from app.models.user import User, Role, Permission
 
 __all__ = [
     "Project",
@@ -41,4 +42,7 @@ __all__ = [
     "LLMProvider",
     "LLMStatus",
     "FineTuningStatus",
+    "User",
+    "Role",
+    "Permission",
 ]
