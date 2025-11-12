@@ -1,3 +1,4 @@
+from app.models.user import User, Role, Permission, UserRole, UserStatus, user_roles, role_permissions
 from app.models.project import Project, ProjectStats, ProjectTier, ProjectStatus
 from app.models.model import Model, ModelVersion, ModelFramework, ModelType, ModelStatus
 from app.models.deployment import Deployment, DeploymentHistory, DeploymentEnvironment, DeploymentStrategy, DeploymentStatus
@@ -7,6 +8,13 @@ from app.models.monitoring import ModelMonitoring, ModelAlert, FeatureMonitoring
 from app.models.genai import LLMModel, PromptTemplate, FineTuningJob, GenAIUsageLog, LLMProvider, LLMStatus, FineTuningStatus
 
 __all__ = [
+    "User",
+    "Role",
+    "Permission",
+    "UserRole",
+    "UserStatus",
+    "user_roles",
+    "role_permissions",
     "Project",
     "ProjectStats",
     "ProjectTier",

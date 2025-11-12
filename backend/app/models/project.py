@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Integer, DateTime, JSON, Enum, Float, Boolean
+from sqlalchemy import Column, String, Integer, DateTime, JSON, Enum, Float, Boolean, ForeignKey
 from sqlalchemy.orm import relationship
 from datetime import datetime
 import enum
@@ -31,7 +31,7 @@ class Project(Base):
     status = Column(Enum(ProjectStatus), default=ProjectStatus.DEVELOPMENT)
     
     # Metadata
-    owner = Column(String, nullable=False, index=True)
+    owner_id = Column(Integer, ForeignKey('users.id'), nullable=True, index=True)  # Made nullable for backward compatibility
     team = Column(String, nullable=False, index=True)
     business_unit = Column(String, nullable=False)
     tags = Column(JSON, default=list)
@@ -47,6 +47,7 @@ class Project(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Relationships
+    owner = relationship("User", back_populates="projects")
     models = relationship("Model", back_populates="project", cascade="all, delete-orphan")
     pipelines = relationship("Pipeline", back_populates="project", cascade="all, delete-orphan")
     experiments = relationship("Experiment", back_populates="project", cascade="all, delete-orphan")
